@@ -29,7 +29,7 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.POST,"/authentication/signup/serivce_provider").permitAll()
             .requestMatchers(HttpMethod.POST,"/authentication/signup/client").permitAll()
             .requestMatchers(HttpMethod.POST,"/authentication/login").permitAll()
-            .requestMatchers(HttpMethod.PATCH,"/changePassword").permitAll()
+            .requestMatchers(HttpMethod.POST,"/authentication/generate_token").permitAll()
         )
         .addFilterBefore(securityFilter,UsernamePasswordAuthenticationFilter.class)
         .build();
