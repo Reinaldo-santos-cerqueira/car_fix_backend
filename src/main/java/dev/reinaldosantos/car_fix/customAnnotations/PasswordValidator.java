@@ -8,12 +8,10 @@ import java.lang.annotation.Target;
 import dev.reinaldosantos.car_fix.ValidatorCustom.PasswordValidatorRules;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
-import jakarta.validation.constraints.NotNull;
 
 @Constraint(validatedBy = PasswordValidatorRules.class)
 @Target({ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
-@NotNull
 public @interface PasswordValidator {
 
     String message() default "Please enter strong password";
