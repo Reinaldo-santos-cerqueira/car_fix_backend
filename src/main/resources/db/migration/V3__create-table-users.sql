@@ -6,6 +6,7 @@ CREATE TABLE users (
     identifier VARCHAR(14) UNIQUE,
     password VARCHAR(255),
     token_phone VARCHAR(255),
+    token_password_change char(6),
     type VARCHAR(50),
     address_id UUID, 
     role VARCHAR(50),

@@ -42,6 +42,8 @@ public class User implements UserDetails {
     private String password;
 
     private String tokenPhone;
+    private String tokenPasswordChange;
+    
 
     @Enumerated(EnumType.STRING)
     private TypeUser type;
