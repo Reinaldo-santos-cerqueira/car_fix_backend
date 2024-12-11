@@ -9,7 +9,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -17,7 +16,6 @@ import lombok.Setter;
 @Table(name = "service_provider")
 @Getter
 @Setter
-@AllArgsConstructor
 public class ServiceProvider {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -25,7 +23,12 @@ public class ServiceProvider {
     private String pathToImageCnh;
     private String cnh;
     @OneToOne
-    @JoinColumn(name = "person_id")
-    private User person;
+    @JoinColumn(name = "user_id")
+    private User user;
     
+    public ServiceProvider(String pathToImageCnh, String cnh, User user) {
+        this.pathToImageCnh = pathToImageCnh;
+        this.cnh = cnh;
+        this.user = user;
+    }
 }

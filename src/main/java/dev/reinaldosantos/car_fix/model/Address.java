@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Data
@@ -16,6 +17,7 @@ import lombok.Setter;
 @Table(name = "address")
 @Getter
 @Setter
+@NoArgsConstructor
 public class Address {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -25,12 +27,14 @@ public class Address {
     private String number;
     private String city;
     private String state;
-    public Address(String neighborhood, String street, String number, String city, String state) {
+    private String cep;
+    public Address(String neighborhood, String street, String number, String city, String state, String cep) {
         this.neighborhood = neighborhood;
         this.street = street;
         this.number = number;
         this.city = city;
         this.state = state;
+        this.cep = cep;
     }
 
 }
