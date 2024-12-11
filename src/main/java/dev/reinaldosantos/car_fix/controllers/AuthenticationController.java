@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import dev.reinaldosantos.car_fix.config.TokenService;
+import dev.reinaldosantos.car_fix.dto.GenerateTokenDto;
 import dev.reinaldosantos.car_fix.dto.LoginDto;
 import dev.reinaldosantos.car_fix.dto.ServiceProviderDto;
 import dev.reinaldosantos.car_fix.dto.UserDto;
@@ -53,5 +54,10 @@ public class AuthenticationController {
         ServiceProviderDto returnUserServiceProvider =  authorizationService.createUserServiceProvider(data);       
         return ResponseEntity.status(HttpStatus.CREATED).body(new CreateServiceProviderResponseDto(returnUserServiceProvider));
     }
-
+    
+    @PostMapping("/generate_token")
+    public ResponseEntity<String> genearateToken(@Valid @RequestBody GenerateTokenDto data) {
+        String tokenReturn =  authorizationService.generateToken(data);       
+        return ResponseEntity.status(HttpStatus.CREATED).body(tokenReturn);
+    }
 }

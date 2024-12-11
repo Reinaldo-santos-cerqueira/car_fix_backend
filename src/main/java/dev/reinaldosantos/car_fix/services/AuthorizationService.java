@@ -1,5 +1,7 @@
 package dev.reinaldosantos.car_fix.services;
 
+import java.text.MessageFormat;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -8,16 +10,19 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import dev.reinaldosantos.car_fix.dto.ServiceProviderDto;
+import dev.reinaldosantos.car_fix.dto.GenerateTokenDto;
 import dev.reinaldosantos.car_fix.dto.UserDto;
 import dev.reinaldosantos.car_fix.enums.TypeUser;
 import dev.reinaldosantos.car_fix.enums.UserRole;
 import dev.reinaldosantos.car_fix.exception.FieldAlreadyExistsException;
+import dev.reinaldosantos.car_fix.exception.NotRegisterFieldException;
 import dev.reinaldosantos.car_fix.model.Address;
 import dev.reinaldosantos.car_fix.model.ServiceProvider;
 import dev.reinaldosantos.car_fix.model.User;
 import dev.reinaldosantos.car_fix.repositories.AddressRepository;
 import dev.reinaldosantos.car_fix.repositories.ServiceProviderRepository;
 import dev.reinaldosantos.car_fix.repositories.UserRepository;
+import dev.reinaldosantos.car_fix.utils.RandomCodeGenerator;
 
 @Service
 public class AuthorizationService implements UserDetailsService {
@@ -28,6 +33,8 @@ public class AuthorizationService implements UserDetailsService {
     private AddressRepository addressRepository;
     @Autowired
     private ServiceProviderRepository serviceProviderRepository;
+    @Autowired
+    EmailService emailService;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -97,5 +104,22 @@ public class AuthorizationService implements UserDetailsService {
             user
         );
         return serviceProviderRepository.save(serviceProvider);
+    }
+
+    public String generateToken(GenerateTokenDto generateTokenDto){
+        RandomCodeGenerator randomCodeGenerator = new RandomCodeGenerator();
+        var tokenPasswordChange = randomCodeGenerator.generateRandomCode();
+        tokenTradePasswordExecute(generateTokenDto,tokenPasswordChange);
+        emailService.sendEmail(generateTokenDto.getEmail(),"Password change", MessageFormat.format("use this code {0} to change password", tokenPasswordChange));
+        return tokenPasswordChange;
+    }
+
+    public void tokenTradePasswordExecute(GenerateTokenDto generateTokenDto, String token){
+        User findUser = (User) userRepository.findByEmail(generateTokenDto.getEmail());
+        if (findUser == null) {
+            throw new NotRegisterFieldException("email");
+        }
+        findUser.setTokenPasswordChange(token);
+        userRepository.save(findUser);
     }
 }
