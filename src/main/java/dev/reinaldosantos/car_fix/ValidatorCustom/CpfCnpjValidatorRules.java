@@ -1,14 +1,14 @@
 package dev.reinaldosantos.car_fix.ValidatorCustom;
 
-import dev.reinaldosantos.car_fix.interfaces.CpfCnpj;
+import dev.reinaldosantos.car_fix.customAnnotations.CpfCnpjValidator;
 import dev.reinaldosantos.car_fix.utils.ValidCnpj;
 import dev.reinaldosantos.car_fix.utils.ValidCpf;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
-public class CpfCnpjValidator implements ConstraintValidator<CpfCnpj, String> {
+public class CpfCnpjValidatorRules implements ConstraintValidator<CpfCnpjValidator, String> {
     @Override
-    public void initialize(CpfCnpj constraintAnnotation) {
+    public void initialize(CpfCnpjValidator constraintAnnotation) {
     }
 
     @Override
