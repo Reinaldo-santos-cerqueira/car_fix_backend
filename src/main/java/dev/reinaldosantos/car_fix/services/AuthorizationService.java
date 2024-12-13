@@ -147,7 +147,7 @@ public class AuthorizationService implements UserDetailsService {
             throw new NotRegisterFieldException("email");
         }
         if (!findUser.getTokenPasswordChange().equals(data.getTokenPasswordChange())) {
-            throw new NotRegisterFieldException("email");
+            throw new NotRegisterFieldException("token");
         }
         String encryptedPassword = new BCryptPasswordEncoder().encode(data.getPassword());
         findUser.setPassword(encryptedPassword);
