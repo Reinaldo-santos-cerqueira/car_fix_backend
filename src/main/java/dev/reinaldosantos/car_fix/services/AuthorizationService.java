@@ -1,8 +1,12 @@
 package dev.reinaldosantos.car_fix.services;
 
 import java.text.MessageFormat;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -10,7 +14,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import dev.reinaldosantos.car_fix.dto.ServiceProviderDto;
+import dev.reinaldosantos.car_fix.config.TokenService;
 import dev.reinaldosantos.car_fix.dto.GenerateTokenDto;
+import dev.reinaldosantos.car_fix.dto.LoginDto;
 import dev.reinaldosantos.car_fix.dto.UserDto;
 import dev.reinaldosantos.car_fix.enums.TypeUser;
 import dev.reinaldosantos.car_fix.enums.UserRole;
@@ -19,6 +25,7 @@ import dev.reinaldosantos.car_fix.exception.NotRegisterFieldException;
 import dev.reinaldosantos.car_fix.model.Address;
 import dev.reinaldosantos.car_fix.model.ServiceProvider;
 import dev.reinaldosantos.car_fix.model.User;
+import dev.reinaldosantos.car_fix.record.LoginResponseDto;
 import dev.reinaldosantos.car_fix.repositories.AddressRepository;
 import dev.reinaldosantos.car_fix.repositories.ServiceProviderRepository;
 import dev.reinaldosantos.car_fix.repositories.UserRepository;
@@ -34,8 +41,10 @@ public class AuthorizationService implements UserDetailsService {
     @Autowired
     private ServiceProviderRepository serviceProviderRepository;
     @Autowired
-    EmailService emailService;
-
+    private EmailService emailService;
+    @Autowired
+    private TokenService tokenService;
+    
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         return userRepository.findByEmail(email);
@@ -106,12 +115,14 @@ public class AuthorizationService implements UserDetailsService {
         return serviceProviderRepository.save(serviceProvider);
     }
 
-    public String generateToken(GenerateTokenDto generateTokenDto){
+    public Map<String, String>  generateToken(GenerateTokenDto generateTokenDto){
         RandomCodeGenerator randomCodeGenerator = new RandomCodeGenerator();
         var tokenPasswordChange = randomCodeGenerator.generateRandomCode();
         tokenTradePasswordExecute(generateTokenDto,tokenPasswordChange);
         emailService.sendEmail(generateTokenDto.getEmail(),"Password change", MessageFormat.format("use this code {0} to change password", tokenPasswordChange));
-        return tokenPasswordChange;
+        Map<String, String> response = new HashMap<>();
+        response.put("message", tokenPasswordChange);
+        return response;
     }
 
     public void tokenTradePasswordExecute(GenerateTokenDto generateTokenDto, String token){
@@ -121,5 +132,11 @@ public class AuthorizationService implements UserDetailsService {
         }
         findUser.setTokenPasswordChange(token);
         userRepository.save(findUser);
+    }
+    public LoginResponseDto login(LoginDto data,AuthenticationManager authenticationManager){
+        var usernamePassword = new UsernamePasswordAuthenticationToken(data.getEmail(), data.getPassword());
+        var auth = authenticationManager.authenticate(usernamePassword);
+        var token = this.tokenService.generateToken((User) auth.getPrincipal());
+        return new LoginResponseDto(token);
     }
 }
