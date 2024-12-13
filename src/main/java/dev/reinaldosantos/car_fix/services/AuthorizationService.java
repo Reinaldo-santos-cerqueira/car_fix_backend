@@ -137,8 +137,8 @@ public class AuthorizationService implements UserDetailsService {
     public LoginResponseDto login(LoginDto data, AuthenticationManager authenticationManager) {
         var usernamePassword = new UsernamePasswordAuthenticationToken(data.getEmail(), data.getPassword());
         var auth = authenticationManager.authenticate(usernamePassword);
-        var token = this.tokenService.generateToken((User) auth.getPrincipal());
-        return new LoginResponseDto(token);
+        this.tokenService.generateToken((User) auth.getPrincipal());
+        return new LoginResponseDto("");
     }
 
     public MessageResponse changePassword(PasswordChangeDto data) {
