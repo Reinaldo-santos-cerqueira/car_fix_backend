@@ -26,17 +26,22 @@ import dev.reinaldosantos.car_fix.exception.FieldAlreadyExistsException;
 import dev.reinaldosantos.car_fix.exception.NotRegisterFieldException;
 import dev.reinaldosantos.car_fix.model.Address;
 import dev.reinaldosantos.car_fix.model.RelServiceUser;
+import dev.reinaldosantos.car_fix.model.RelUserVehicle;
 import dev.reinaldosantos.car_fix.model.Service;
 import dev.reinaldosantos.car_fix.model.ServiceProvider;
 import dev.reinaldosantos.car_fix.model.User;
+import dev.reinaldosantos.car_fix.model.Vehicle;
 import dev.reinaldosantos.car_fix.record.LoginResponseDto;
 import dev.reinaldosantos.car_fix.record.MessageResponse;
 import dev.reinaldosantos.car_fix.repositories.AddressRepository;
 import dev.reinaldosantos.car_fix.repositories.RelServiceUserRepository;
+import dev.reinaldosantos.car_fix.repositories.RelUserVehicleRepository;
 import dev.reinaldosantos.car_fix.repositories.ServiceProviderRepository;
 import dev.reinaldosantos.car_fix.repositories.ServiceRepository;
 import dev.reinaldosantos.car_fix.repositories.UserRepository;
+import dev.reinaldosantos.car_fix.repositories.VehicleRepository;
 import dev.reinaldosantos.car_fix.utils.RandomCodeGenerator;
+import jakarta.transaction.Transactional;
 
 @org.springframework.stereotype.Service
 public class AuthorizationService implements UserDetailsService {
@@ -55,20 +60,28 @@ public class AuthorizationService implements UserDetailsService {
     private RelServiceUserRepository relServiceUserRepository;
     @Autowired
     private ServiceRepository serviceRepository;
+    @Autowired
+    VehicleRepository vehicleRepository;
+    @Autowired
+    RelUserVehicleRepository relUserVehicleRepository;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         return userRepository.findByEmail(email);
     }
-    
+
+    @Transactional(rollbackOn = Exception.class)
     public UserDto createUserClient(UserDto userDto) {
         this.checkIfEmailOrIdentifierExists(userDto);
         Address savedAddress = this.createAddres(userDto);
-        this.createUser(userDto, savedAddress);
+        User createUser = this.createUser(userDto, savedAddress);
+        Vehicle createdVehicle = this.creatVehicle(userDto);
+        this.createRelUserVehicle(createUser,createdVehicle);
         userDto.setPassword(null);
         return userDto;
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public ServiceProviderDto createUserServiceProvider(ServiceProviderDto serviceProviderDto) {
         this.checkIfEmailOrIdentifierExists(serviceProviderDto.getUserDto());
         this.checkIfCnhAndServicesExists(serviceProviderDto);
@@ -91,12 +104,12 @@ public class AuthorizationService implements UserDetailsService {
     }
 
     private boolean checkIfCnhAndServicesExists(ServiceProviderDto serviceProviderDto) {
-        if(serviceProviderRepository.findByCnh( serviceProviderDto.getCnh()) != null){
+        if (serviceProviderRepository.findByCnh(serviceProviderDto.getCnh()) != null) {
             throw new FieldAlreadyExistsException("cnh");
         }
         for (RelServiceUserDto service : serviceProviderDto.getListServicesID()) {
             Optional<Service> serviceFind = serviceRepository.findById(service.getServiceId());
-            if(serviceFind.isEmpty()){
+            if (serviceFind.isEmpty()) {
                 throw new FieldAlreadyExistsException("service id");
             }
         }
@@ -104,21 +117,20 @@ public class AuthorizationService implements UserDetailsService {
     }
 
     private Address createAddres(UserDto userDto) {
-        Address addressNew = new Address(
+        Address savedAddress = this.addressRepository.save(new Address(
                 userDto.getNeighborhood(),
                 userDto.getStreet(),
                 userDto.getNumber(),
                 userDto.getCity(),
                 userDto.getState(),
-                userDto.getCep());
-        Address savedAddress = this.addressRepository.save(addressNew);
+                userDto.getCep()));
         return savedAddress;
     }
 
     public User createUser(UserDto userDto, Address savedAddress) {
         String encryptedPassword = new BCryptPasswordEncoder().encode(userDto.getPassword());
         TypeUser userType = TypeUser.valueOf(userDto.getType().toUpperCase());
-        User userNew = new User(
+        return this.userRepository.save(new User(
                 userDto.getFullName(),
                 userDto.getPhoneNumber(),
                 userDto.getEmail(),
@@ -126,8 +138,7 @@ public class AuthorizationService implements UserDetailsService {
                 encryptedPassword,
                 userType,
                 savedAddress,
-                UserRole.USER);
-        return this.userRepository.save(userNew);
+                UserRole.USER));
     }
 
     public ServiceProvider createServiceProvider(ServiceProviderDto serviceProviderDto, User user) {
@@ -180,14 +191,24 @@ public class AuthorizationService implements UserDetailsService {
         return new MessageResponse("Password change success");
     }
 
-    public void createRelServiceUser(ServiceProviderDto serviceProviderDto,User createUser){
+    public void createRelServiceUser(ServiceProviderDto serviceProviderDto, User createUser) {
         for (RelServiceUserDto service : serviceProviderDto.getListServicesID()) {
             Optional<Service> serviceFind = serviceRepository.findById(service.getServiceId());
             serviceFind.ifPresent(serviceEntity -> {
-                RelServiceUser newRelServiceUser = new RelServiceUser(serviceEntity, createUser,service.getPriceService(),service.getPriceKmTraveled());
-                relServiceUserRepository.save(newRelServiceUser);
+                relServiceUserRepository.save(new RelServiceUser(serviceEntity, createUser,
+                        service.getPriceService(), service.getPriceKmTraveled()));
             });
         }
+    }
+
+    public Vehicle creatVehicle(UserDto userDto) {
+        Vehicle createdVehicle = vehicleRepository.save(new Vehicle(userDto.getModel(), userDto.getMark(),
+                userDto.getPlate(), userDto.getColor(), userDto.getPathToDocument()));
+        return createdVehicle;
+    }
+
+    public RelUserVehicle createRelUserVehicle(User userCreated, Vehicle vehicleCreated){
+        return relUserVehicleRepository.save(new RelUserVehicle(vehicleCreated,userCreated));
     }
 
 }
