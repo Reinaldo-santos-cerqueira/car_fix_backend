@@ -30,7 +30,10 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.POST,"/authentication/signup/client").permitAll()
             .requestMatchers(HttpMethod.POST,"/authentication/login").permitAll()
             .requestMatchers(HttpMethod.POST,"/authentication/generate_token").permitAll()
-            .requestMatchers(HttpMethod.POST,"/authentication/change_password").permitAll()
+            .requestMatchers(HttpMethod.PATCH,"/authentication/change_password").permitAll()
+            .requestMatchers(HttpMethod.GET, "/service").hasRole("USER")
+            .requestMatchers(HttpMethod.POST, "/service").hasRole("ADMIN")
+
         )
         .addFilterBefore(securityFilter,UsernamePasswordAuthenticationFilter.class)
         .build();
