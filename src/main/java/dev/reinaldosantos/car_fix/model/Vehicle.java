@@ -8,10 +8,12 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Entity(name = "vehicle")
 @Table(name = "vehicle")
+@NoArgsConstructor
 public class Vehicle {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

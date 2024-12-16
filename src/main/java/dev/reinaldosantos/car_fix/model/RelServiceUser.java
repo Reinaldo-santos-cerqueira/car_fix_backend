@@ -10,12 +10,14 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity(name = "rel_user_service")
 @Table(name = "rel_user_service")
 @Getter
 @Setter
+@NoArgsConstructor
 public class RelServiceUser {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -31,8 +33,10 @@ public class RelServiceUser {
     private Float priceService;
     private Float priceKmTraveled;
 
-    public RelServiceUser(Service service,User user){
+    public RelServiceUser(Service service,User user,Float priceService, Float priceKmTraveled){
         this.user=user;
         this.service=service;
+        this.priceService = priceService;
+        this.priceKmTraveled = priceKmTraveled;
     }
 }
