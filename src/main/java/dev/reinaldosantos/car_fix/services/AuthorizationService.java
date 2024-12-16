@@ -3,6 +3,7 @@ package dev.reinaldosantos.car_fix.services;
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -11,29 +12,33 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
 
 import dev.reinaldosantos.car_fix.dto.ServiceProviderDto;
 import dev.reinaldosantos.car_fix.config.TokenService;
 import dev.reinaldosantos.car_fix.dto.GenerateTokenDto;
 import dev.reinaldosantos.car_fix.dto.LoginDto;
 import dev.reinaldosantos.car_fix.dto.PasswordChangeDto;
+import dev.reinaldosantos.car_fix.dto.RelServiceUserDto;
 import dev.reinaldosantos.car_fix.dto.UserDto;
 import dev.reinaldosantos.car_fix.enums.TypeUser;
 import dev.reinaldosantos.car_fix.enums.UserRole;
 import dev.reinaldosantos.car_fix.exception.FieldAlreadyExistsException;
 import dev.reinaldosantos.car_fix.exception.NotRegisterFieldException;
 import dev.reinaldosantos.car_fix.model.Address;
+import dev.reinaldosantos.car_fix.model.RelServiceUser;
+import dev.reinaldosantos.car_fix.model.Service;
 import dev.reinaldosantos.car_fix.model.ServiceProvider;
 import dev.reinaldosantos.car_fix.model.User;
 import dev.reinaldosantos.car_fix.record.LoginResponseDto;
 import dev.reinaldosantos.car_fix.record.MessageResponse;
 import dev.reinaldosantos.car_fix.repositories.AddressRepository;
+import dev.reinaldosantos.car_fix.repositories.RelServiceUserRepository;
 import dev.reinaldosantos.car_fix.repositories.ServiceProviderRepository;
+import dev.reinaldosantos.car_fix.repositories.ServiceRepository;
 import dev.reinaldosantos.car_fix.repositories.UserRepository;
 import dev.reinaldosantos.car_fix.utils.RandomCodeGenerator;
 
-@Service
+@org.springframework.stereotype.Service
 public class AuthorizationService implements UserDetailsService {
 
     @Autowired
@@ -46,12 +51,16 @@ public class AuthorizationService implements UserDetailsService {
     private EmailService emailService;
     @Autowired
     private TokenService tokenService;
+    @Autowired
+    private RelServiceUserRepository relServiceUserRepository;
+    @Autowired
+    private ServiceRepository serviceRepository;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         return userRepository.findByEmail(email);
     }
-
+    
     public UserDto createUserClient(UserDto userDto) {
         this.checkIfEmailOrIdentifierExists(userDto);
         Address savedAddress = this.createAddres(userDto);
@@ -62,9 +71,11 @@ public class AuthorizationService implements UserDetailsService {
 
     public ServiceProviderDto createUserServiceProvider(ServiceProviderDto serviceProviderDto) {
         this.checkIfEmailOrIdentifierExists(serviceProviderDto.getUserDto());
+        this.checkIfCnhAndServicesExists(serviceProviderDto);
         Address savedAddress = this.createAddres(serviceProviderDto.getUserDto());
         User userCreated = this.createUser(serviceProviderDto.getUserDto(), savedAddress);
         this.createServiceProvider(serviceProviderDto, userCreated);
+        this.createRelServiceUser(serviceProviderDto, userCreated);
         serviceProviderDto.getUserDto().setPassword(null);
         return serviceProviderDto;
     }
@@ -75,6 +86,19 @@ public class AuthorizationService implements UserDetailsService {
         }
         if (userRepository.findByIdentifier(userDto.getIdentifier()) != null) {
             throw new FieldAlreadyExistsException("identifier");
+        }
+        return false;
+    }
+
+    private boolean checkIfCnhAndServicesExists(ServiceProviderDto serviceProviderDto) {
+        if(serviceProviderRepository.findByCnh( serviceProviderDto.getCnh()) != null){
+            throw new FieldAlreadyExistsException("cnh");
+        }
+        for (RelServiceUserDto service : serviceProviderDto.getListServicesID()) {
+            Optional<Service> serviceFind = serviceRepository.findById(service.getServiceId());
+            if(serviceFind.isEmpty()){
+                throw new FieldAlreadyExistsException("service id");
+            }
         }
         return false;
     }
@@ -137,8 +161,8 @@ public class AuthorizationService implements UserDetailsService {
     public LoginResponseDto login(LoginDto data, AuthenticationManager authenticationManager) {
         var usernamePassword = new UsernamePasswordAuthenticationToken(data.getEmail(), data.getPassword());
         var auth = authenticationManager.authenticate(usernamePassword);
-        this.tokenService.generateToken((User) auth.getPrincipal());
-        return new LoginResponseDto("");
+        var token = this.tokenService.generateToken((User) auth.getPrincipal());
+        return new LoginResponseDto(token);
     }
 
     public MessageResponse changePassword(PasswordChangeDto data) {
@@ -154,6 +178,16 @@ public class AuthorizationService implements UserDetailsService {
         findUser.setTokenPasswordChange("");
         userRepository.save(findUser);
         return new MessageResponse("Password change success");
+    }
+
+    public void createRelServiceUser(ServiceProviderDto serviceProviderDto,User createUser){
+        for (RelServiceUserDto service : serviceProviderDto.getListServicesID()) {
+            Optional<Service> serviceFind = serviceRepository.findById(service.getServiceId());
+            serviceFind.ifPresent(serviceEntity -> {
+                RelServiceUser newRelServiceUser = new RelServiceUser(serviceEntity, createUser,service.getPriceService(),service.getPriceKmTraveled());
+                relServiceUserRepository.save(newRelServiceUser);
+            });
+        }
     }
 
 }
