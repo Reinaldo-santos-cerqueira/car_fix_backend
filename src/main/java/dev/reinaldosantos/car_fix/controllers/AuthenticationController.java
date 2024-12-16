@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -58,7 +59,7 @@ public class AuthenticationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(tokenReturn);
     }
 
-    @PostMapping("/change_password")
+    @PatchMapping("/change_password")
     public ResponseEntity<MessageResponse> passwordChange(@Valid @RequestBody PasswordChangeDto data) {
         MessageResponse tokenReturn = authorizationService.changePassword(data);
         return ResponseEntity.status(HttpStatus.CREATED).body(tokenReturn);
