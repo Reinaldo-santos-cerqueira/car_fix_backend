@@ -7,5 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import dev.reinaldosantos.car_fix.model.ServiceProvider;
 
 public interface ServiceProviderRepository extends JpaRepository<ServiceProvider, UUID> {
-
+        ServiceProvider findByCnh(String cnh);
 }
