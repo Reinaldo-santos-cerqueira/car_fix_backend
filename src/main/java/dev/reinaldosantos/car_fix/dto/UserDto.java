@@ -41,4 +41,15 @@ public class UserDto {
     private String state;
     @NotNull(message = "Please enter valid cep")
     private String cep;
+    @NotNull(message = "Please enter valid model")
+    private String model;
+    @NotNull(message = "Please enter valid mark")
+    private String mark;
+    @NotNull(message = "Please enter valid color")
+    private String color;
+    @NotNull(message = "Please enter valid photo of document")
+    private String pathToDocument;
+    @NotNull(message = "Please enter valid plate")
+    private String plate;
+
 }
