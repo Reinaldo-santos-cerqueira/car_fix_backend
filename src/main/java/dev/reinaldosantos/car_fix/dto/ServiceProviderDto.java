@@ -11,9 +11,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class ServiceProviderDto {
-    @NotNull(message = "Please enter path to image cnh")
-    private String pathToImageCnh;
+public class ServiceProviderDto {   
     @NotNull(message = "Please enter valid  cnh")
     @Size(min = 11,max = 11,message = "Please enter valid ")
     private String cnh;

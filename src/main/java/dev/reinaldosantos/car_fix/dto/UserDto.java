@@ -47,8 +47,6 @@ public class UserDto {
     private String mark;
     @NotNull(message = "Please enter valid color")
     private String color;
-    @NotNull(message = "Please enter valid photo of document")
-    private String pathToDocument;
     @NotNull(message = "Please enter valid plate")
     private String plate;
 
