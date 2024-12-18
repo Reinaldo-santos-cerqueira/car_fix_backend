@@ -12,6 +12,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.reinaldosantos.car_fix.dto.ServiceProviderDto;
 import dev.reinaldosantos.car_fix.config.TokenService;
@@ -23,6 +26,7 @@ import dev.reinaldosantos.car_fix.dto.UserDto;
 import dev.reinaldosantos.car_fix.enums.TypeUser;
 import dev.reinaldosantos.car_fix.enums.UserRole;
 import dev.reinaldosantos.car_fix.exception.FieldAlreadyExistsException;
+import dev.reinaldosantos.car_fix.exception.InternalServerErrorCustom;
 import dev.reinaldosantos.car_fix.exception.NotRegisterFieldException;
 import dev.reinaldosantos.car_fix.model.Address;
 import dev.reinaldosantos.car_fix.model.RelServiceUser;
@@ -64,6 +68,8 @@ public class AuthorizationService implements UserDetailsService {
     VehicleRepository vehicleRepository;
     @Autowired
     RelUserVehicleRepository relUserVehicleRepository;
+    @Autowired
+    FileStorageService fileStorageService;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -71,26 +77,62 @@ public class AuthorizationService implements UserDetailsService {
     }
 
     @Transactional(rollbackOn = Exception.class)
-    public UserDto createUserClient(UserDto userDto) {
-        this.checkIfEmailOrIdentifierExists(userDto);
-        Address savedAddress = this.createAddres(userDto);
-        User createUser = this.createUser(userDto, savedAddress);
-        Vehicle createdVehicle = this.creatVehicle(userDto);
-        this.createRelUserVehicle(createUser,createdVehicle);
-        userDto.setPassword(null);
-        return userDto;
+    public UserDto createUserClient(String clientData, MultipartFile file) throws Exception {
+        ObjectMapper objectMapper = new ObjectMapper();
+        UserDto userDto = objectMapper.readValue(clientData, UserDto.class);
+        String pathImageDocumentVehicle = fileStorageService.saveFileWithRandomName(file);
+        try {
+            this.checkIfEmailOrIdentifierExists(userDto);
+            Address savedAddress = this.createAddres(userDto);
+            User createUser = this.createUser(userDto, savedAddress);
+            Vehicle createdVehicle = this.creatVehicle(userDto, pathImageDocumentVehicle);
+            this.createRelUserVehicle(createUser, createdVehicle);
+            userDto.setPassword(null);
+            return userDto;
+        } catch (FieldAlreadyExistsException e) {
+            fileStorageService.deleteFile(pathImageDocumentVehicle);
+            throw new FieldAlreadyExistsException(e.getFieldName());
+        }catch (Exception e){
+            fileStorageService.deleteFile(pathImageDocumentVehicle);
+            throw new InternalServerErrorCustom(e.getMessage());
+        }
+
     }
 
     @Transactional(rollbackOn = Exception.class)
-    public ServiceProviderDto createUserServiceProvider(ServiceProviderDto serviceProviderDto) {
-        this.checkIfEmailOrIdentifierExists(serviceProviderDto.getUserDto());
-        this.checkIfCnhAndServicesExists(serviceProviderDto);
-        Address savedAddress = this.createAddres(serviceProviderDto.getUserDto());
-        User userCreated = this.createUser(serviceProviderDto.getUserDto(), savedAddress);
-        this.createServiceProvider(serviceProviderDto, userCreated);
-        this.createRelServiceUser(serviceProviderDto, userCreated);
-        serviceProviderDto.getUserDto().setPassword(null);
-        return serviceProviderDto;
+    public ServiceProviderDto createUserServiceProvider(String serviceProviderData, MultipartFile imageDocumentVehicle,
+            MultipartFile imageCnh) throws Exception {
+        String pathImageDocumentVehicle = fileStorageService.saveFileWithRandomName(imageDocumentVehicle);
+        String pathImageCnh = fileStorageService.saveFileWithRandomName(imageCnh);
+        try {
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            ServiceProviderDto serviceProviderDto = objectMapper.readValue(serviceProviderData,
+                    ServiceProviderDto.class);
+            this.checkIfEmailOrIdentifierExists(serviceProviderDto.getUserDto());
+            this.checkIfCnhAndServicesExists(serviceProviderDto);
+            Address savedAddress = this.createAddres(serviceProviderDto.getUserDto());
+            User userCreated = this.createUser(serviceProviderDto.getUserDto(), savedAddress);
+            Vehicle createdVehicle = this.creatVehicle(serviceProviderDto.getUserDto(), pathImageDocumentVehicle);
+            this.createServiceProvider(serviceProviderDto, userCreated, pathImageCnh);
+            this.createRelServiceUser(serviceProviderDto, userCreated);
+            this.createRelUserVehicle(userCreated, createdVehicle);
+
+            serviceProviderDto.getUserDto().setPassword(null);
+            return serviceProviderDto;
+        } catch (FieldAlreadyExistsException e) {
+            fileStorageService.deleteFile(pathImageCnh);
+            fileStorageService.deleteFile(pathImageDocumentVehicle);
+            throw new FieldAlreadyExistsException(e.getFieldName());
+        }catch (NotRegisterFieldException e){
+            fileStorageService.deleteFile(pathImageCnh);
+            fileStorageService.deleteFile(pathImageDocumentVehicle);
+            throw new NotRegisterFieldException(e.getFieldName());
+        }catch (Exception e){
+            fileStorageService.deleteFile(pathImageCnh);
+            fileStorageService.deleteFile(pathImageDocumentVehicle);
+            throw new InternalServerErrorCustom(e.getMessage());
+        }
     }
 
     private boolean checkIfEmailOrIdentifierExists(UserDto userDto) {
@@ -110,7 +152,7 @@ public class AuthorizationService implements UserDetailsService {
         for (RelServiceUserDto service : serviceProviderDto.getListServicesID()) {
             Optional<Service> serviceFind = serviceRepository.findById(service.getServiceId());
             if (serviceFind.isEmpty()) {
-                throw new FieldAlreadyExistsException("service id");
+                throw new NotRegisterFieldException("service id");
             }
         }
         return false;
@@ -141,9 +183,9 @@ public class AuthorizationService implements UserDetailsService {
                 UserRole.USER));
     }
 
-    public ServiceProvider createServiceProvider(ServiceProviderDto serviceProviderDto, User user) {
+    public ServiceProvider createServiceProvider(ServiceProviderDto serviceProviderDto, User user, String imageCnh) {
         ServiceProvider serviceProvider = new ServiceProvider(
-                serviceProviderDto.getPathToImageCnh(),
+                imageCnh,
                 serviceProviderDto.getCnh(),
                 user);
         return serviceProviderRepository.save(serviceProvider);
@@ -201,14 +243,14 @@ public class AuthorizationService implements UserDetailsService {
         }
     }
 
-    public Vehicle creatVehicle(UserDto userDto) {
+    public Vehicle creatVehicle(UserDto userDto, String pathImageDocumentVehicle) {
         Vehicle createdVehicle = vehicleRepository.save(new Vehicle(userDto.getModel(), userDto.getMark(),
-                userDto.getPlate(), userDto.getColor(), userDto.getPathToDocument()));
+                userDto.getPlate(), userDto.getColor(), pathImageDocumentVehicle));
         return createdVehicle;
     }
 
-    public RelUserVehicle createRelUserVehicle(User userCreated, Vehicle vehicleCreated){
-        return relUserVehicleRepository.save(new RelUserVehicle(vehicleCreated,userCreated));
+    public RelUserVehicle createRelUserVehicle(User userCreated, Vehicle vehicleCreated) {
+        return relUserVehicleRepository.save(new RelUserVehicle(vehicleCreated, userCreated));
     }
 
 }
