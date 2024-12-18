@@ -26,7 +26,7 @@ public class SecurityConfig {
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(
             authorize -> authorize
-            .requestMatchers(HttpMethod.POST,"/authentication/signup/serivce_provider").permitAll()
+            .requestMatchers(HttpMethod.POST,"/authentication/signup/service_provider").permitAll()
             .requestMatchers(HttpMethod.POST,"/authentication/signup/client").permitAll()
             .requestMatchers(HttpMethod.POST,"/authentication/login").permitAll()
             .requestMatchers(HttpMethod.POST,"/authentication/generate_token").permitAll()
