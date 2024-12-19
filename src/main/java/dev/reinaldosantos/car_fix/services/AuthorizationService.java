@@ -7,7 +7,9 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -28,6 +30,7 @@ import dev.reinaldosantos.car_fix.enums.UserRole;
 import dev.reinaldosantos.car_fix.exception.FieldAlreadyExistsException;
 import dev.reinaldosantos.car_fix.exception.InternalServerErrorCustom;
 import dev.reinaldosantos.car_fix.exception.NotRegisterFieldException;
+import dev.reinaldosantos.car_fix.exception.UnauthorizedException;
 import dev.reinaldosantos.car_fix.model.Address;
 import dev.reinaldosantos.car_fix.model.RelServiceUser;
 import dev.reinaldosantos.car_fix.model.RelUserVehicle;
@@ -92,7 +95,7 @@ public class AuthorizationService implements UserDetailsService {
         } catch (FieldAlreadyExistsException e) {
             fileStorageService.deleteFile(pathImageDocumentVehicle);
             throw new FieldAlreadyExistsException(e.getFieldName());
-        }catch (Exception e){
+        } catch (Exception e) {
             fileStorageService.deleteFile(pathImageDocumentVehicle);
             throw new InternalServerErrorCustom(e.getMessage());
         }
@@ -124,11 +127,11 @@ public class AuthorizationService implements UserDetailsService {
             fileStorageService.deleteFile(pathImageCnh);
             fileStorageService.deleteFile(pathImageDocumentVehicle);
             throw new FieldAlreadyExistsException(e.getFieldName());
-        }catch (NotRegisterFieldException e){
+        } catch (NotRegisterFieldException e) {
             fileStorageService.deleteFile(pathImageCnh);
             fileStorageService.deleteFile(pathImageDocumentVehicle);
             throw new NotRegisterFieldException(e.getFieldName());
-        }catch (Exception e){
+        } catch (Exception e) {
             fileStorageService.deleteFile(pathImageCnh);
             fileStorageService.deleteFile(pathImageDocumentVehicle);
             throw new InternalServerErrorCustom(e.getMessage());
@@ -212,10 +215,18 @@ public class AuthorizationService implements UserDetailsService {
     }
 
     public LoginResponseDto login(LoginDto data, AuthenticationManager authenticationManager) {
-        var usernamePassword = new UsernamePasswordAuthenticationToken(data.getEmail(), data.getPassword());
-        var auth = authenticationManager.authenticate(usernamePassword);
-        var token = this.tokenService.generateToken((User) auth.getPrincipal());
-        return new LoginResponseDto(token);
+
+        try {
+            var usernamePassword = new UsernamePasswordAuthenticationToken(data.getEmail(), data.getPassword());
+            var auth = authenticationManager.authenticate(usernamePassword);
+            var token = this.tokenService.generateToken((User) auth.getPrincipal());
+            return new LoginResponseDto(token);
+
+        } catch (BadCredentialsException ex) {
+            throw new UnauthorizedException();
+        } catch (AuthenticationException ex) {
+            throw new UnauthorizedException();
+        }
     }
 
     public MessageResponse changePassword(PasswordChangeDto data) {
