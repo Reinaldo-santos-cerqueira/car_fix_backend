@@ -32,8 +32,8 @@ public class ServiceControllers {
     }
 
     @GetMapping("")
-    public ResponseEntity<List<Service>> get(@RequestBody ServiceDto data) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(this.serviceService.get());
+    public ResponseEntity<List<Service>> get() {
+        return ResponseEntity.status(HttpStatus.OK).body(this.serviceService.get());
     }
     
 }
