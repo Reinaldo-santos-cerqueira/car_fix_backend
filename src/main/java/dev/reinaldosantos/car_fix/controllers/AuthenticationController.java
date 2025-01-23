@@ -45,8 +45,8 @@ public class AuthenticationController {
             MediaType.APPLICATION_JSON_VALUE })
     public ResponseEntity<?> signUpClient(
             @Valid @RequestPart("clientData") String clientData,
-            @RequestPart("file") MultipartFile file) throws Exception {
-        UserDto returnUserCreate = authorizationService.createUserClient(clientData, file);
+            @RequestPart("imageDocumentVehicle") MultipartFile imageDocumentVehicle) throws Exception {
+        UserDto returnUserCreate = authorizationService.createUserClient(clientData, imageDocumentVehicle);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(new CreateUserResponseDto(returnUserCreate));
     }
@@ -73,6 +73,6 @@ public class AuthenticationController {
     @PatchMapping("/change_password")
     public ResponseEntity<MessageResponse> passwordChange(@Valid @RequestBody PasswordChangeDto data) {
         MessageResponse tokenReturn = authorizationService.changePassword(data);
-        return ResponseEntity.status(HttpStatus.CREATED).body(tokenReturn);
+        return ResponseEntity.status(HttpStatus.OK).body(tokenReturn);
     }
 }
