@@ -31,7 +31,7 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.POST,"/authentication/login").permitAll()
             .requestMatchers(HttpMethod.POST,"/authentication/generate_token").permitAll()
             .requestMatchers(HttpMethod.PATCH,"/authentication/change_password").permitAll()
-            .requestMatchers(HttpMethod.GET, "/service").hasRole("USER")
+            .requestMatchers(HttpMethod.GET, "/service").permitAll() 
             .requestMatchers(HttpMethod.POST, "/service").hasRole("ADMIN")
 
         )
