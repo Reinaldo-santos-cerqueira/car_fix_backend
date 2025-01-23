@@ -80,10 +80,10 @@ public class AuthorizationService implements UserDetailsService {
     }
 
     @Transactional(rollbackOn = Exception.class)
-    public UserDto createUserClient(String clientData, MultipartFile file) throws Exception {
+    public UserDto createUserClient(String clientData, MultipartFile imageDocumentVehicle) throws Exception {
         ObjectMapper objectMapper = new ObjectMapper();
         UserDto userDto = objectMapper.readValue(clientData, UserDto.class);
-        String pathImageDocumentVehicle = fileStorageService.saveFileWithRandomName(file);
+        String pathImageDocumentVehicle = fileStorageService.saveFileWithRandomName(imageDocumentVehicle);
         try {
             this.checkIfEmailOrIdentifierExists(userDto);
             Address savedAddress = this.createAddres(userDto);
