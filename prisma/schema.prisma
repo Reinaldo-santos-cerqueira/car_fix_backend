@@ -1,0 +1,113 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Address {
+  id           String   @id @default(uuid()) @db.Uuid
+  neighborhood String?
+  street       String?
+  number       String?
+  city         String?
+  state        String?
+  cep          String?
+  complement   String?
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  User         User[]
+}
+
+model User {
+  id                    String             @id @default(uuid()) @db.Uuid
+  full_name             String
+  phone_number          String
+  email                 String             @unique
+  identifier            String             @unique
+  password              String
+  token_phone           String?
+  token_password_change String?            @db.Char(6)
+  type                  String?
+  address_id            String?            @db.Uuid
+  role                  String?
+  created_at            DateTime           @default(now())
+  updated_at            DateTime           @updatedAt
+  address               Address?           @relation(fields: [address_id], references: [id])
+  ServiceProvider       ServiceProvider[]
+  Vehicle               Vehicle[]
+  ServiceRequested      ServiceRequested[]
+}
+
+model ServiceProvider {
+  id                     String                   @id @default(uuid()) @db.Uuid
+  path_to_image_cnh      String?
+  cnh                    String                   @unique
+  created_at             DateTime                 @default(now())
+  updated_at             DateTime                 @updatedAt
+  user_id                String                   @db.Uuid
+  user                   User                     @relation(fields: [user_id], references: [id])
+  ServiceProviderService ServiceProviderService[]
+  ServiceRequested       ServiceRequested[]
+}
+
+model Service {
+  id                     String                   @id @default(uuid()) @db.Uuid
+  description            String?
+  title                  String?
+  price_service          Float                    @default(0.00)
+  price_km_traveled      Float                    @default(0.00)
+  created_at             DateTime                 @default(now())
+  updated_at             DateTime                 @updatedAt
+  user_id                String                   @db.Uuid
+  ServiceProviderService ServiceProviderService[]
+  ServiceRequested       ServiceRequested[]
+}
+
+model Vehicle {
+  id               String   @id @default(uuid()) @db.Uuid
+  model            String
+  mark             String
+  plate            String
+  color            String
+  path_to_document String
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+  user_id          String?  @db.Uuid
+  User             User?    @relation(fields: [user_id], references: [id])
+}
+
+model ServiceProviderService {
+  id                String          @id @default(uuid()) @db.Uuid
+  serviceProviderId String          @db.Uuid
+  serviceId         String          @db.Uuid
+  created_at        DateTime        @default(now())
+  updated_at        DateTime        @updatedAt
+  serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id])
+  service           Service         @relation(fields: [serviceId], references: [id])
+}
+
+model ServiceRequested {
+  id                         String          @id @default(uuid()) @db.Uuid
+  service_provider_id        String          @db.Uuid
+  service_id                 String          @db.Uuid
+  user_id                    String          @db.Uuid
+  status                     String          @default("IN PROGRESS")
+  latitude_client            Float?
+  longitude_client           Float?
+  latitude_service_provider  Float?
+  longitude_service_provider Float?
+  created_at                 DateTime        @default(now())
+  updated_at                 DateTime        @updatedAt
+  service_provider           ServiceProvider @relation(fields: [service_provider_id], references: [id])
+  service                    Service         @relation(fields: [service_id], references: [id])
+  user                       User            @relation(fields: [user_id], references: [id])
+}
