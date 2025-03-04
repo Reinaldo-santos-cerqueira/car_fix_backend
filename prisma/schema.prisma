@@ -15,12 +15,12 @@ datasource db {
 
 model Address {
   id           String   @id @default(uuid()) @db.Uuid
-  neighborhood String?
-  street       String?
-  number       String?
-  city         String?
-  state        String?
-  cep          String?
+  neighborhood String
+  street       String
+  number       String
+  city         String
+  state        String
+  cep          String
   complement   String?
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt
