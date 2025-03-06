@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "node src/server.js",
     "dev": "nodemon"
   },
   "keywords": [],
@@ -23,15 +23,20 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "express-async-errors": "^3.1.1",
+    "express-async-handler": "^1.2.0",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "module-alias": "^2.2.3",
+    "multer": "^1.4.5-lts.1",
     "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
+    "@types/bcrypt": "^5.0.2",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
+    "@types/multer": "^1.4.12",
     "@types/node": "^22.13.9",
     "@typescript-eslint/eslint-plugin": "^8.26.0",
     "@typescript-eslint/parser": "^8.26.0",
@@ -44,12 +49,12 @@
     "typescript-eslint": "^8.26.0"
   },
   "_moduleAliases": {
-    "@": "./dist/*",
-    "@repositories": "./dist/repositories/",
-    "@services": "./dist/services/",
-    "@controllers": "./dist/controllers/",
-    "@middlewares": "./dist/middlewares/",
-    "@models": "./dist/models/",
-    "@utils": "./dist/utils/"
+    "@": "./src/*",
+    "@repositories": "./src/repositories/",
+    "@services": "./src/services/",
+    "@controllers": "./src/controllers/",
+    "@middlewares": "./src/middlewares/",
+    "@utils": "./src/utils/",
+    "@exceptions": "./src/exceptions/"
   }
 }
