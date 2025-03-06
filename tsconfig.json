@@ -13,13 +13,13 @@
     "noImplicitAny": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
       "@repositories": ["src/repositories/"],
       "@services": ["src/services/"],
       "@controllers": ["src/controllers/"],
       "@middlewares": ["src/middlewares/"],
-      "@models": ["src/models/"],
       "@utils": ["src/utils/"],
+      "@exceptions": ["src/exceptions/"],
+      "@dto": ["src/dto/"],
     }
   },
   "include": ["src/**/*.ts"],
