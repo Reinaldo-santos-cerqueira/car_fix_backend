@@ -55,6 +55,7 @@
     "@controllers": "./src/controllers/",
     "@middlewares": "./src/middlewares/",
     "@utils": "./src/utils/",
-    "@exceptions": "./src/exceptions/"
+    "@exceptions": "./src/exceptions/",
+    "@routes": "src/routes/routes.ts"
   }
 }
