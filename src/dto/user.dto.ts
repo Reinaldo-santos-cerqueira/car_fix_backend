@@ -1,6 +1,14 @@
-import { IsEmail, IsOptional, IsString, IsUUID, IsDate, ValidateNested } from "class-validator";
+import {
+    IsEmail,
+    IsOptional,
+    IsString,
+    IsUUID,
+    IsDate,
+    ValidateNested,
+} from "class-validator";
 import { AddressDto } from "./address.dto";
 import { Type } from "class-transformer";
+import { VehicleDto } from "./vehicle.dto";
 
 export class UserDto {
     @IsString({ message: "Full name must be a string" })
@@ -31,12 +39,16 @@ export class UserDto {
         type?: string;
 
     @IsOptional()
-    @IsUUID(undefined,{ message: "Address ID must be a valid UUID" })
+    @IsUUID(undefined, { message: "Address ID must be a valid UUID" })
         address_id?: string;
 
     @ValidateNested({ message: "Address must be a valid address" })
     @Type(() => AddressDto)
-        address?: AddressDto;
+        address: AddressDto;
+
+    @ValidateNested({ message: "Vehicle must be a valid address" })
+    @Type(() => VehicleDto)
+        vehicle: VehicleDto;    
 
     @IsOptional()
     @IsString({ message: "Role must be a string" })
@@ -58,11 +70,12 @@ export class UserDto {
         password: string,
         created_at: Date,
         updated_at: Date,
+        address: AddressDto,
+        vehicle: VehicleDto,
         token_phone?: string,
         token_password_change?: string,
         type?: string,
         address_id?: string,
-        address?: AddressDto,
         role?: string
     ) {
         this.full_name = full_name;
@@ -78,5 +91,6 @@ export class UserDto {
         this.address_id = address_id;
         this.address = address;
         this.role = role;
+        this.vehicle = vehicle;
     }
 }
