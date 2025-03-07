@@ -7,8 +7,13 @@ export class UserController {
         this.service = new UserService();
     }
 
-    async save(req: Request, res: Response): Promise<void> {
-        const result = await this.service.save(req.body,req.file);
-        res.status(201).json(result);
+    async saveClient(req: Request, res: Response): Promise<void> {
+        await this.service.saveClient(req.body,req.file);
+        res.status(201).json({});
+    }
+
+    async saveServiceProvider(req: Request, res: Response):Promise<void>{
+        await this.service.saveServiceProvider(req.body,req.files);
+        res.status(201).json({});
     }
 }
