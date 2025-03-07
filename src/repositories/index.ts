@@ -1,1 +1,2 @@
-export * from "./user/userRepositories";
+export * from "./user/userRepository";
+export * from "./serviceProviderService.repository";
