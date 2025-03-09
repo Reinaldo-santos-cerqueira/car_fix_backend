@@ -16,4 +16,14 @@ export class UserController {
         await this.service.saveServiceProvider(req.body,req.files);
         res.status(201).json({});
     }
+
+    async loginClient(req: Request, res: Response): Promise<void>{
+        await this.service.loginClient(req.body);
+        res.status(200).json({});
+    }
+
+    async logiServiceProvider(req: Request, res: Response): Promise<void> {
+        const serviceId = await this.service.loginServiceProvider(req.body);
+        res.status(200).json(serviceId);
+    }
 }
