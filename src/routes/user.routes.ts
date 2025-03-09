@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import {ValidationServiceProviderDtoMiddlewares, ValidationUserDtoMiddlewares, uploadImage } from "@middlewares";
+import {ValidationLoginDtoMiddlewares, ValidationServiceProviderDtoMiddlewares, ValidationUserDtoMiddlewares, uploadImage } from "@middlewares";
 import { UserController } from "@controllers";
 
 const userRouter = express.Router();
@@ -20,5 +20,13 @@ userRouter.post("/users/service_provider",
     }
 );
 
+userRouter.post("/users/login/client",ValidationLoginDtoMiddlewares.validateUser(), async (req: Request, res: Response) => {
+    return await controller.loginClient(req, res);
+});
+
+userRouter.post("/users/login/service_provider",ValidationLoginDtoMiddlewares.validateUser(),async (req: Request, res: Response) => {
+    return await controller.logiServiceProvider(req, res);
+}
+);
 
 export { userRouter };
