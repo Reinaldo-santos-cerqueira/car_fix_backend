@@ -1,4 +1,4 @@
-import { ServiceProviderDto, UserDto } from "@dto";
+import { LoginDto, ServiceProviderDto, UserDto } from "@dto";
 import { CustomException } from "@exceptions";
 import { Prisma } from "@prisma/client";
 import { UserRepository,ServiceProviderServiceRepository } from "@repositories";
@@ -108,8 +108,8 @@ export class UserService {
             throw new CustomException("Image cnh is required", 400);
         }
         try {
-            await this.findUserByIdentifierOrEmailOrCnh(serviceProviderDto.identifier, serviceProviderDto.email, serviceProviderDto.cnh);
-            serviceProviderDto.vehicle.path_to_document = fileImageDocumentVehicle.path;
+            await this.findUserByIdentifierOrEmailOrCnh(serviceProviderDto.user_dto.identifier, serviceProviderDto.user_dto.email, serviceProviderDto.cnh);
+            serviceProviderDto.user_dto.vehicle.path_to_document = fileImageDocumentVehicle.path;
             serviceProviderDto.path_to_image_cnh = fileImageCnh.path;
             const serviceProvider: Prisma.UserCreateInput = await this.createServiceUserCreateInput(serviceProviderDto);    
             
@@ -128,49 +128,49 @@ export class UserService {
 
     private async createServiceUserCreateInput(serviceProviderDto: ServiceProviderDto): Promise<Prisma.UserCreateInput> {
         return {
-            full_name: serviceProviderDto.full_name,
-            phone_number: serviceProviderDto.phone_number,
-            email: serviceProviderDto.email,
-            identifier: serviceProviderDto.identifier,
-            password: await this.encryptPassword(serviceProviderDto.password),
-            created_at: serviceProviderDto.created_at,
-            updated_at: serviceProviderDto.updated_at,
-            token_phone: serviceProviderDto.token_phone,
-            token_password_change: serviceProviderDto.token_password_change,
-            type: serviceProviderDto.type,
+            full_name: serviceProviderDto.user_dto.full_name,
+            phone_number: serviceProviderDto.user_dto.phone_number,
+            email: serviceProviderDto.user_dto.email,
+            identifier: serviceProviderDto.user_dto.identifier,
+            password: await this.encryptPassword(serviceProviderDto.user_dto.password),
+            created_at: serviceProviderDto.user_dto.created_at,
+            updated_at: serviceProviderDto.user_dto.updated_at,
+            token_phone: serviceProviderDto.user_dto.token_phone,
+            token_password_change: serviceProviderDto.user_dto.token_password_change,
+            type: serviceProviderDto.user_dto.type,
             address: {
                 create: {
-                    created_at: serviceProviderDto.address.created_at,
-                    updated_at: serviceProviderDto.address.updated_at,
-                    neighborhood: serviceProviderDto.address.neighborhood,
-                    street: serviceProviderDto.address.street,
-                    number: serviceProviderDto.address.number,
-                    city: serviceProviderDto.address.city,
-                    state: serviceProviderDto.address.state,
-                    cep: serviceProviderDto.address.cep,
-                    complement: serviceProviderDto.address.complement,
+                    created_at: serviceProviderDto.user_dto.address.created_at,
+                    updated_at: serviceProviderDto.user_dto.address.updated_at,
+                    neighborhood: serviceProviderDto.user_dto.address.neighborhood,
+                    street: serviceProviderDto.user_dto.address.street,
+                    number: serviceProviderDto.user_dto.address.number,
+                    city: serviceProviderDto.user_dto.address.city,
+                    state: serviceProviderDto.user_dto.address.state,
+                    cep: serviceProviderDto.user_dto.address.cep,
+                    complement: serviceProviderDto.user_dto.address.complement,
                 }
             },
             Vehicle: {
                 create: {
-                    created_at: serviceProviderDto.vehicle.created_at,
-                    updated_at: serviceProviderDto.vehicle.updated_at, 
-                    model: serviceProviderDto.vehicle.model,
-                    color: serviceProviderDto.vehicle.color,
-                    mark: serviceProviderDto.vehicle.mark,
-                    plate: serviceProviderDto.vehicle.plate,
-                    path_to_document: serviceProviderDto.vehicle.path_to_document
+                    created_at: serviceProviderDto.user_dto.vehicle.created_at,
+                    updated_at: serviceProviderDto.user_dto.vehicle.updated_at, 
+                    model: serviceProviderDto.user_dto.vehicle.model,
+                    color: serviceProviderDto.user_dto.vehicle.color,
+                    mark: serviceProviderDto.user_dto.vehicle.mark,
+                    plate: serviceProviderDto.user_dto.vehicle.plate,
+                    path_to_document: serviceProviderDto.user_dto.vehicle.path_to_document
                 }
             },
             ServiceProvider: {
                 create: {
                     cnh: serviceProviderDto.cnh,
-                    created_at: serviceProviderDto.created_at,
-                    updated_at: serviceProviderDto.updated_at,
+                    created_at: serviceProviderDto.user_dto.created_at,
+                    updated_at: serviceProviderDto.user_dto.updated_at,
                     path_to_image_cnh: serviceProviderDto.path_to_image_cnh,
                 }
             },
-            role: serviceProviderDto.role,
+            role: serviceProviderDto.user_dto.role,
         };
     }
 
@@ -179,6 +179,25 @@ export class UserService {
         if(userReturn !== null){
             throw new CustomException("User already exists", 409);
         }
+    }
+
+    async loginClient(loginDto: LoginDto) {
+        const user = await this.repository.findByEmail(loginDto.email);
+        if (!user || !(await this.comparePassword(loginDto.password, user.password))) {
+            throw new CustomException("Email or password incorrect", 401);
+        }
+        return;
+    }
+
+    async loginServiceProvider(loginDto: LoginDto): Promise<string[]> {
+        const user = await this.repository.findByEmailAndSelectService(loginDto.email);
+        if (!user || !(await this.comparePassword(loginDto.password, user.password))) {
+            throw new CustomException("Email or password incorrect", 401);
+        }
+        const serviceIds = user?.ServiceProvider.flatMap(sp =>
+            sp.ServiceProviderService.map(sps => sps.serviceId)
+        ) || [];
+        return serviceIds;
     }
 
     private async deleteImage(file: Express.Multer.File){
@@ -192,4 +211,7 @@ export class UserService {
         return await bcrypt.hash(password, 10);
     }
 
+    private async comparePassword(passwordRequest: string, passwordDb: string): Promise<boolean> {
+        return await bcrypt.compare(passwordRequest, passwordDb);
+    }
 }
