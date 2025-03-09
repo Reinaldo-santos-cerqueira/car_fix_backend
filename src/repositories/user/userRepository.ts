@@ -30,6 +30,34 @@ export class UserRepository{
         });
     }
 
+    async findByEmail(email: string) {
+        return await this.prisma.user.findUnique({
+            where: {
+                email: email,
+            }
+        });
+    }
+
+    async findByEmailAndSelectService(email: string) {
+        return await this.prisma.user.findUnique({
+            where: {
+                email: email,
+            },
+            select: {
+                password: true,
+                ServiceProvider: {
+                    select: {
+                        ServiceProviderService: {
+                            select: {
+                                serviceId: true,
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
     async findUserByIdentifierOrEmailorCnh(identifier: string, email: string,cnh: string): Promise<User | null> {      
         return await this.prisma.user.findFirst({
             where: {
