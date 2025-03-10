@@ -1,4 +1,4 @@
-import { LoginDto, SendTokenDto, ServiceProviderDto, UserDto } from "@dto";
+import { ChangePasswordDto, LoginDto, SendTokenDto, ServiceProviderDto, UserDto } from "@dto";
 import { CustomException } from "@exceptions";
 import { Prisma } from "@prisma/client";
 import { UserRepository,ServiceProviderServiceRepository } from "@repositories";
@@ -192,16 +192,6 @@ export class UserService {
         }
         return;
     }
-    
-    async sendByTokenTradePassword(sendTokenDto: SendTokenDto) {
-        const user = await this.repository.findByEmail(sendTokenDto.email);
-        if (!user) {
-            throw new CustomException("Email is incorrect", 401);
-        }
-        const randomToken = this.generateCodeRandomTokenPhone();
-        this.sendEmail(user.email, "Redefinição de Senha",this.createMessageEmail("car fix",user.full_name, randomToken));
-        return;
-    }
 
     async loginServiceProvider(loginDto: LoginDto): Promise<string[]> {
         const user = await this.repository.findByEmailAndSelectService(loginDto.email);
@@ -212,6 +202,21 @@ export class UserService {
             sp.ServiceProviderService.map(sps => sps.serviceId)
         ) || [];
         return serviceIds;
+    }
+
+    async sendByTokenTradePassword(sendTokenDto: SendTokenDto) {
+        const user = await this.repository.findByEmail(sendTokenDto.email);
+        if (!user) {
+            throw new CustomException("Email is incorrect", 401);
+        }
+        const randomToken = this.generateCodeRandomTokenPhone();
+        this.sendEmail(user.email, "Redefinição de Senha", this.createMessageEmail("car fix enterprise", user.full_name, randomToken));
+        return;
+    }
+
+    async changePassword(changePasswordDto:ChangePasswordDto) {
+        await this.repository.updatePasswordFindByEmailAndToken(changePasswordDto.email,changePasswordDto.token, changePasswordDto.password);
+        return;
     }
 
     private async deleteImage(file: Express.Multer.File){

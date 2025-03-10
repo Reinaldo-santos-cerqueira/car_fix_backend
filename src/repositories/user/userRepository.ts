@@ -1,3 +1,4 @@
+import { CustomException } from "@exceptions";
 import { PrismaClient, Prisma, User } from "@prisma/client";
 
 export class UserRepository{
@@ -71,5 +72,30 @@ export class UserRepository{
                 ServiceProvider: true
             }
         });
+    }
+    
+    async findByEmailAndToken(email: string, randomToken: string): Promise<User | null> {
+        return await this.prisma.user.findFirst({
+            where: {
+                email: email,
+                token_password_change: randomToken
+            }
+        });
+    }
+
+    async updatePasswordFindByEmailAndToken(email: string, randomToken: string, password: string): Promise<User | null>  {
+        try {
+            return await this.prisma.user.update({
+                where: { email, token_password_change: randomToken },
+                data: { password },
+            });
+        } catch (error) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError) {
+                if (error.code === "P2025") {
+                    throw new CustomException("Email or token incorrect", 401);
+                }
+            }
+            throw new CustomException("Internal server error", 500);
+        }
     }
 }

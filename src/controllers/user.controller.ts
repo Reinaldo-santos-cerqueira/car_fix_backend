@@ -26,4 +26,15 @@ export class UserController {
         const serviceId = await this.service.loginServiceProvider(req.body);
         res.status(200).json(serviceId);
     }
+
+    async sendByTokenTradePassword(req: Request, res: Response): Promise<void> {
+        const serviceId = await this.service.sendByTokenTradePassword(req.body);
+        res.status(200).json(serviceId);
+    }
+
+    async changePassword(req: Request, res: Response): Promise<void> {
+        await this.service.changePassword(req.body);
+        res.status(204).json();
+    }
+
 }

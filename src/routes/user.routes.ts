@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import {ValidationLoginDtoMiddlewares, ValidationServiceProviderDtoMiddlewares, ValidationUserDtoMiddlewares, uploadImage } from "@middlewares";
+import { ValidationLoginDtoMiddlewares, ValidationSendTokenDto, ValidationServiceProviderDtoMiddlewares, ValidationUserDtoMiddlewares, uploadImage } from "@middlewares";
 import { UserController } from "@controllers";
 
 const userRouter = express.Router();
@@ -26,7 +26,14 @@ userRouter.post("/users/login/client",ValidationLoginDtoMiddlewares.validateUser
 
 userRouter.post("/users/login/service_provider",ValidationLoginDtoMiddlewares.validateUser(),async (req: Request, res: Response) => {
     return await controller.logiServiceProvider(req, res);
-}
-);
+});
+
+userRouter.post("/users/generate_token_password", ValidationSendTokenDto.validateUser(), async (req: Request, res: Response) => {
+    return await controller.sendByTokenTradePassword(req, res);
+});
+
+userRouter.patch("/users/change_password", ValidationSendTokenDto.validateUser(), async (req: Request, res: Response) => {
+    return await controller.changePassword(req, res);
+});
 
 export { userRouter };
