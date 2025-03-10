@@ -1,10 +1,14 @@
-import { LoginDto, ServiceProviderDto, UserDto } from "@dto";
+import { LoginDto, SendTokenDto, ServiceProviderDto, UserDto } from "@dto";
 import { CustomException } from "@exceptions";
 import { Prisma } from "@prisma/client";
 import { UserRepository,ServiceProviderServiceRepository } from "@repositories";
 import bcrypt from "bcrypt";
 import fs from "fs";
 import path from "path";
+import { createTransport } from "nodemailer";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 export class UserService {
     repository: UserRepository;
@@ -188,6 +192,16 @@ export class UserService {
         }
         return;
     }
+    
+    async sendByTokenTradePassword(sendTokenDto: SendTokenDto) {
+        const user = await this.repository.findByEmail(sendTokenDto.email);
+        if (!user) {
+            throw new CustomException("Email is incorrect", 401);
+        }
+        const randomToken = this.generateCodeRandomTokenPhone();
+        this.sendEmail(user.email, "Redefinição de Senha",this.createMessageEmail("car fix",user.full_name, randomToken));
+        return;
+    }
 
     async loginServiceProvider(loginDto: LoginDto): Promise<string[]> {
         const user = await this.repository.findByEmailAndSelectService(loginDto.email);
@@ -213,5 +227,44 @@ export class UserService {
 
     private async comparePassword(passwordRequest: string, passwordDb: string): Promise<boolean> {
         return await bcrypt.compare(passwordRequest, passwordDb);
+    }
+
+    private generateCodeRandomTokenPhone() {
+        const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+";
+        let code = "";
+        for (let i = 0; i < 6; i++) {
+            const randomCharacters = Math.floor(Math.random() * characters.length);
+            code += characters[randomCharacters];
+        }
+        return code;
+    }
+
+    private async sendEmail(recipient: string, subject:string, message: string) {
+        const transporter = createTransport({
+            service: "gmail",
+            auth: {
+                user: process.env.EMAIL,
+                pass: process.env.PASSWORD
+            }
+        });
+
+        const mailOptions = {
+            from: process.env.EMAIL,
+            to: recipient,
+            subject: subject,
+            text: message
+        };
+
+        await transporter.sendMail(mailOptions);
+    }
+    private createMessageEmail(enterprise: string,userName: string, randomToken: string): string {
+        return `
+            <p>Olá, ${userName},</p>
+            <p>Recebemos uma solicitação para redefinir sua senha. Para continuar com o processo, utilize o código abaixo:</p>
+            <h2 style="color: #2d89ef;">🔑 ${randomToken}</h2>
+            <p>Se você não solicitou a alteração, ignore este e-mail. O código expirará em 30 minutos.</p>
+            <p>Atenciosamente,</p>
+            <p><strong>${enterprise}</strong></p>
+        `;
     }
 }
