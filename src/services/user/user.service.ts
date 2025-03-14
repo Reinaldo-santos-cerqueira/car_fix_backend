@@ -3,10 +3,9 @@ import { CustomException } from "@exceptions";
 import { Prisma } from "@prisma/client";
 import { UserRepository,ServiceProviderServiceRepository } from "@repositories";
 import bcrypt from "bcrypt";
-import fs from "fs";
-import path from "path";
 import { createTransport } from "nodemailer";
 import dotenv from "dotenv";
+import { removeImage } from "@utils";
 
 dotenv.config();
 
@@ -28,10 +27,10 @@ export class UserService {
             const user: Prisma.UserCreateInput = await this.createClientUserCreateInput(userDto);    
                 
             await this.repository.saveClient(user);   
-            return;
+            
         } catch (error) {
             if(error instanceof CustomException ){
-                this.deleteImage(file);
+                removeImage(file);
                 throw new CustomException(error.message, error.statusCode);
             }
             throw new CustomException(error + "", 500);
@@ -119,11 +118,11 @@ export class UserService {
             
             const saveServiceProvider = await this.repository.saveServiceProvider(serviceProvider);   
             await this.serviceProviderServiceRepository.save(saveServiceProvider.ServiceProvider[0].id, serviceProviderDto.services_id);
-            return;
+            
         } catch (error) {
             if(error instanceof CustomException ){
-                this.deleteImage(fileImageCnh);
-                this.deleteImage(fileImageDocumentVehicle);
+                removeImage(fileImageCnh);
+                removeImage(fileImageDocumentVehicle);
                 throw new CustomException(error.message, error.statusCode);
             }
             throw new CustomException(error + "", 500);
@@ -190,7 +189,6 @@ export class UserService {
         if (!user || !(await this.comparePassword(loginDto.password, user.password))) {
             throw new CustomException("Email or password incorrect", 401);
         }
-        return;
     }
 
     async loginServiceProvider(loginDto: LoginDto): Promise<string[]> {
@@ -211,19 +209,10 @@ export class UserService {
         }
         const randomToken = this.generateCodeRandomTokenPhone();
         this.sendEmail(user.email, "Redefinição de Senha", this.createMessageEmail("car fix enterprise", user.full_name, randomToken));
-        return;
     }
 
     async changePassword(changePasswordDto:ChangePasswordDto) {
         await this.repository.updatePasswordFindByEmailAndToken(changePasswordDto.email,changePasswordDto.token, changePasswordDto.password);
-        return;
-    }
-
-    private async deleteImage(file: Express.Multer.File){
-        const filePath = path.resolve(file.path);
-        fs.unlink(filePath, (err) => {
-            if (err) {throw new CustomException(err.name + " " + err.code,);}
-        });
     }
 
     private async encryptPassword(password: string):Promise<string> {
