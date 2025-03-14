@@ -111,3 +111,10 @@ model ServiceRequested {
   service                    Service         @relation(fields: [service_id], references: [id])
   user                       User            @relation(fields: [user_id], references: [id])
 }
+
+model ServiceProviderOnline {
+  id                  String  @id @default(uuid()) @db.Uuid
+  service_provider_id String  @db.Uuid @unique
+  socket_io_id        String
+  state               Int
+}
