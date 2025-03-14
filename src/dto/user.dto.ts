@@ -2,7 +2,6 @@ import {
     IsEmail,
     IsOptional,
     IsString,
-    IsUUID,
     IsDate,
     ValidateNested,
 } from "class-validator";
@@ -38,10 +37,6 @@ export class UserDto {
     @IsString({ message: "Type must be a string" })
         type?: string;
 
-    @IsOptional()
-    @IsUUID(undefined, { message: "Address ID must be a valid UUID" })
-        address_id?: string;
-
     @ValidateNested({ message: "Address must be a valid address" })
     @Type(() => AddressDto)
         address: AddressDto;
@@ -75,7 +70,6 @@ export class UserDto {
         token_phone?: string,
         token_password_change?: string,
         type?: string,
-        address_id?: string,
         role?: string
     ) {
         this.full_name = full_name;
@@ -88,7 +82,6 @@ export class UserDto {
         this.token_phone = token_phone;
         this.token_password_change = token_password_change;
         this.type = type;
-        this.address_id = address_id;
         this.address = address;
         this.role = role;
         this.vehicle = vehicle;

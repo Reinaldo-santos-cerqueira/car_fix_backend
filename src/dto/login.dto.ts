@@ -1,11 +1,12 @@
-import { IsEmail, IsString } from "class-validator";
+import { IsEmail, IsOptional, IsString } from "class-validator";
 
 export class LoginDto {
     @IsEmail({},{message: "Please enter valid email"})
         email: string;
     @IsString({ message: "Please enter valid password" })
         password: string;
-    @IsString({ message: "Please enter valid password" })
+    @IsOptional()
+    @IsString({ message: "Please enter valid token" })
         token_phone?: string;
     constructor(
         email: string,
