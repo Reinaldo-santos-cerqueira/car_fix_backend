@@ -1,10 +1,10 @@
-import { PrismaClient, ServiceProviderOnline} from "@prisma/client";
+import { ServiceProviderOnline} from "@prisma/client";
+import {prisma} from "./log.repositories";
 
 export class ServiceProviderOnlinerepository{
-    prisma = new PrismaClient();
 
     async save(socketIoId: string, serviceProviderId: string,state: number ): Promise<void> {
-        await this.prisma.serviceProviderOnline.create({
+        await prisma.serviceProviderOnline.create({
             data: {
                 socket_io_id: socketIoId,
                 service_provider_id: serviceProviderId,
@@ -14,7 +14,7 @@ export class ServiceProviderOnlinerepository{
     }
 
     async update(socketIoId: string, serviceProviderId: string,state: number){
-        await this.prisma.serviceProviderOnline.update({
+        await prisma.serviceProviderOnline.update({
             data:{
                 state: state,
                 socket_io_id: socketIoId,
@@ -26,9 +26,17 @@ export class ServiceProviderOnlinerepository{
     }
 
     async findById(serviceProviderId: string):Promise<ServiceProviderOnline | null>{
-        return this.prisma.serviceProviderOnline.findFirst({
+        return prisma.serviceProviderOnline.findFirst({
             where: {
                 service_provider_id: serviceProviderId
+            }
+        });
+    }
+
+    async deleteBySocketId(socketIoId: string): Promise<void>{
+        await prisma.serviceProviderOnline.deleteMany({
+            where:{
+                socket_io_id: socketIoId,
             }
         });
     }

@@ -1,17 +1,17 @@
 import { CustomException } from "@exceptions";
-import { PrismaClient, Prisma, User } from "@prisma/client";
+import { Prisma, User } from "@prisma/client";
+import {prisma} from "./log.repositories";
 
 export class UserRepository{
-    prisma = new PrismaClient();
 
     async saveClient(user: Prisma.UserCreateInput): Promise<Prisma.UserCreateInput> {
-        return await this.prisma.user.create({
+        return await prisma.user.create({
             data: user
         });
     }
 
     async saveServiceProvider(user: Prisma.UserCreateInput): Promise<{ ServiceProvider: { id: string; created_at: Date; updated_at: Date; path_to_image_cnh: string | null; cnh: string; user_id: string; }[]}> {
-        return await this.prisma.user.create({
+        return await prisma.user.create({
             data: user,
             select:{
                 ServiceProvider: true
@@ -19,9 +19,8 @@ export class UserRepository{
         });
     }
 
-
     async findUserByIdentifierOrEmail(identifier: string, email: string): Promise<Prisma.UserCreateInput | null> {      
-        return await this.prisma.user.findFirst({
+        return await prisma.user.findFirst({
             where: {
                 OR: [
                     { identifier: identifier },
@@ -32,7 +31,7 @@ export class UserRepository{
     }
 
     async findByEmail(email: string) {
-        return await this.prisma.user.findUnique({
+        return await prisma.user.findUnique({
             where: {
                 email: email,
             }
@@ -40,7 +39,7 @@ export class UserRepository{
     }
 
     async findByEmailAndSelectService(email: string) {
-        return await this.prisma.user.findUnique({
+        return await prisma.user.findUnique({
             where: {
                 email: email,
             },
@@ -60,7 +59,7 @@ export class UserRepository{
     }
 
     async findUserByIdentifierOrEmailorCnh(identifier: string, email: string,cnh: string): Promise<User | null> {      
-        return await this.prisma.user.findFirst({
+        return await prisma.user.findFirst({
             where: {
                 OR: [
                     { identifier: identifier },
@@ -75,7 +74,7 @@ export class UserRepository{
     }
     
     async findByEmailAndToken(email: string, randomToken: string): Promise<User | null> {
-        return await this.prisma.user.findFirst({
+        return await prisma.user.findFirst({
             where: {
                 email: email,
                 token_password_change: randomToken
@@ -85,7 +84,7 @@ export class UserRepository{
 
     async updatePasswordFindByEmailAndToken(email: string, randomToken: string, password: string): Promise<User | null>  {
         try {
-            return await this.prisma.user.update({
+            return await prisma.user.update({
                 where: { email, token_password_change: randomToken },
                 data: { password },
             });
