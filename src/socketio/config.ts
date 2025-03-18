@@ -1,69 +1,30 @@
-import { Server, Socket } from "socket.io";
 import { Server as HttpServer } from "http";
-import { ServiceProviderOnlinerepository } from "@repositories";
-import { ServiceProviderSignupSocketIoRequest } from "@utils";
+import { Server as SocketIOServer, Socket } from "socket.io";
+import { SocketController } from "@controllers";
 
-export function setupSocket(server: HttpServer) {
-    const serviceProviderOnlinerepository = new ServiceProviderOnlinerepository();
-    const io = new Server(server, {
+export function setupSocket(server: HttpServer): SocketIOServer {
+    const io = new SocketIOServer(server, {
         cors: {
             origin: "*",
             methods: ["GET", "POST"],
         },
     });
 
+    const socketController = new SocketController(io);
+
     io.on("connection", (socket: Socket) => {
-        const sendError = (message: string) => {
-            io.to(socket.id).emit("error_message", {message});
-        };
 
-        socket.on("signup_provider_service", async (msg) => {
-            if (!msg || typeof msg !== "string") {
-                sendError("Id is required and must be a string");
-                return;
-            }
+        socket.on("signup_provider_service", (msg) =>
+            socketController.handleSignupProviderService(socket, msg)
+        );
 
-            try {
-                const existingUser = await serviceProviderOnlinerepository.findById(msg);
+        socket.on("request_service", (msg) =>
+            socketController.handleRequestService(socket, msg)
+        );
 
-                const serviceProviderOnline: ServiceProviderSignupSocketIoRequest = {
-                    socketIoId: socket.id,
-                    serviceProviderId: msg,
-                    state: 0
-                };
-
-                if (!existingUser) {
-                    await serviceProviderOnlinerepository.save(
-                        serviceProviderOnline.socketIoId,
-                        serviceProviderOnline.serviceProviderId,
-                        serviceProviderOnline.state
-                    );
-                    io.to(socket.id).emit("signup_provider_service", "Cadastrado");
-                } else {
-                    await serviceProviderOnlinerepository.update(
-                        serviceProviderOnline.socketIoId,
-                        serviceProviderOnline.serviceProviderId,
-                        serviceProviderOnline.state
-                    );
-                    io.to(socket.id).emit("signup_provider_service", "Atualizado");
-                }
-            } catch (error) {
-                sendError("Erro ao processar cadastro: " + error);
-            }
-        });
-
-        socket.on("request_service", (msg) => {
-            if (!msg) {
-                sendError("Data of service is required");
-                return;
-            }
-
-            io.emit("received_service", msg);
-        });
-
-        socket.on("disconnect", () => {
-            console.log("Usuário desconectado:", socket.id);
-        });
+        socket.on("disconnect", () =>
+            socketController.handleDisconnect(socket)
+        );
     });
 
     return io;
