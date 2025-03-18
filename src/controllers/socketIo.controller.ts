@@ -1,6 +1,6 @@
 import { Server, Socket } from "socket.io";
 import { SocketService } from "@services";
-import { ServiceRequested } from "@prisma/client";
+import { ServiceProviderOnline, ServiceRequested } from "@prisma/client";
 
 export class SocketController {
     private readonly io: Server;
@@ -24,15 +24,19 @@ export class SocketController {
         }
     }
 
-    public handleRequestService(socket: Socket, msg: ServiceRequested) {
+    public async handleRequestService(socket: Socket, msg: ServiceRequested) {
         if (!msg) {
             this.sendError(socket, "Os dados do serviço são obrigatórios.");
             return;
         }
-        this.io.emit("received_service", msg);
+        const arrayServiceProviderOnline:ServiceProviderOnline[] = await this.socketService.sendRequestedService(msg);
+        arrayServiceProviderOnline.forEach( (item) => {
+            this.io.to(item.service_provider_id).emit("received_service", msg);
+        });
     }
 
     public async handleDisconnect(socket: Socket) {
         await this.socketService.removeProviderBySocketId(socket.id);
     }
+
 }

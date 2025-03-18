@@ -1,6 +1,7 @@
 import { Server as HttpServer } from "http";
 import { Server as SocketIOServer, Socket } from "socket.io";
 import { SocketController } from "@controllers";
+import { ServiceRequested } from "@prisma/client";
 
 export function setupSocket(server: HttpServer): SocketIOServer {
     const io = new SocketIOServer(server, {
@@ -18,7 +19,7 @@ export function setupSocket(server: HttpServer): SocketIOServer {
             socketController.handleSignupProviderService(socket, msg)
         );
 
-        socket.on("request_service", (msg) =>
+        socket.on("request_service", (msg: ServiceRequested) =>
             socketController.handleRequestService(socket, msg)
         );
 

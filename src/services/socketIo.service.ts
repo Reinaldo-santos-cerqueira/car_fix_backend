@@ -1,11 +1,14 @@
-import { ServiceProviderOnlinerepository } from "@repositories";
+import { ServiceProviderOnline, ServiceRequested } from "@prisma/client";
+import { ServiceProviderOnlinerepository, ServiceRequestedRepository } from "@repositories";
 import { ServiceProviderSignupSocketIoRequest } from "@utils";
 
 export class SocketService {
     private readonly serviceProviderRepo: ServiceProviderOnlinerepository;
+    private readonly serviceRequestedRepo: ServiceRequestedRepository;
 
     constructor() {
         this.serviceProviderRepo = new ServiceProviderOnlinerepository();
+        this.serviceRequestedRepo = new ServiceRequestedRepository();
     }
 
     public async signupProviderService(socketId: string, providerId: string): Promise<string> {
@@ -40,5 +43,11 @@ export class SocketService {
 
     public async removeProviderBySocketId(socketId: string): Promise<void> {
         await this.serviceProviderRepo.deleteBySocketId(socketId);
+    }
+
+    public async sendRequestedService(msg: ServiceRequested): Promise<ServiceProviderOnline[]> {
+        await this.serviceRequestedRepo.createServiceRequested(msg);
+        const serviceProviderOnline:ServiceProviderOnline[]  = await this.serviceProviderRepo.findByState(); 
+        return serviceProviderOnline;
     }
 }

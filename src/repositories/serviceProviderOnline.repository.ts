@@ -33,6 +33,14 @@ export class ServiceProviderOnlinerepository{
         });
     }
 
+    async findByState():Promise<ServiceProviderOnline[]>{
+        return prisma.serviceProviderOnline.findMany({
+            where: {
+                state: 0
+            }
+        });
+    }
+
     async deleteBySocketId(socketIoId: string): Promise<void>{
         await prisma.serviceProviderOnline.deleteMany({
             where:{
