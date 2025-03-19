@@ -38,6 +38,13 @@ export class UserRepository{
         });
     }
 
+    async updateTokenByEmail(email: string, token: string) {
+        return await prisma.user.update({
+            where: { email },   
+            data: { token_password_change: token },
+        });
+    }
+    
     async findByEmailAndSelectService(email: string) {
         return await prisma.user.findUnique({
             where: {
@@ -86,7 +93,7 @@ export class UserRepository{
         try {
             return await prisma.user.update({
                 where: { email, token_password_change: randomToken },
-                data: { password },
+                data: { password,token_password_change: "" },
             });
         } catch (error) {
             if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -94,7 +101,7 @@ export class UserRepository{
                     throw new CustomException("Email or token incorrect", 401);
                 }
             }
-            throw new CustomException("Internal server error", 500);
+            throw new CustomException("Internal server error" + error, 500);
         }
     }
 }
