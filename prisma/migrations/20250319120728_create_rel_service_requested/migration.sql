@@ -1,10 +1,10 @@
 -- CreateTable
 CREATE TABLE "ServiceRequested" (
     "id" UUID NOT NULL,
-    "service_provider_id" UUID NOT NULL,
+    "service_provider_id" UUID,
     "service_id" UUID NOT NULL,
     "user_id" UUID NOT NULL,
-    "status" TEXT NOT NULL DEFAULT 'IN PROGRESS',
+    "status" INTEGER NOT NULL DEFAULT 0,
     "latitude_client" DOUBLE PRECISION,
     "longitude_client" DOUBLE PRECISION,
     "latitude_service_provider" DOUBLE PRECISION,
@@ -16,7 +16,7 @@ CREATE TABLE "ServiceRequested" (
 );
 
 -- AddForeignKey
-ALTER TABLE "ServiceRequested" ADD CONSTRAINT "ServiceRequested_service_provider_id_fkey" FOREIGN KEY ("service_provider_id") REFERENCES "ServiceProvider"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ServiceRequested" ADD CONSTRAINT "ServiceRequested_service_provider_id_fkey" FOREIGN KEY ("service_provider_id") REFERENCES "ServiceProvider"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ServiceRequested" ADD CONSTRAINT "ServiceRequested_service_id_fkey" FOREIGN KEY ("service_id") REFERENCES "Service"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

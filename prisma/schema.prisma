@@ -57,6 +57,7 @@ model ServiceProvider {
   user                   User                     @relation(fields: [user_id], references: [id])
   ServiceProviderService ServiceProviderService[]
   ServiceRequested       ServiceRequested[]
+  ServiceProviderOnline ServiceProviderOnline[]
 }
 
 model Service {
@@ -67,7 +68,6 @@ model Service {
   price_km_traveled      Float                    @default(0.00)
   created_at             DateTime                 @default(now())
   updated_at             DateTime                 @updatedAt
-  user_id                String                   @db.Uuid
   ServiceProviderService ServiceProviderService[]
   ServiceRequested       ServiceRequested[]
 }
@@ -117,6 +117,7 @@ model ServiceProviderOnline {
   service_provider_id String  @db.Uuid @unique
   socket_io_id        String
   state               Int
+  service_provider    ServiceProvider? @relation(fields: [service_provider_id], references: [id])
 }
 
 model Log {

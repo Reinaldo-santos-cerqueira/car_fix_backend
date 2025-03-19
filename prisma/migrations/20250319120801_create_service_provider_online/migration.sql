@@ -10,3 +10,6 @@ CREATE TABLE "ServiceProviderOnline" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "ServiceProviderOnline_service_provider_id_key" ON "ServiceProviderOnline"("service_provider_id");
+
+-- AddForeignKey
+ALTER TABLE "ServiceProviderOnline" ADD CONSTRAINT "ServiceProviderOnline_service_provider_id_fkey" FOREIGN KEY ("service_provider_id") REFERENCES "ServiceProvider"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
