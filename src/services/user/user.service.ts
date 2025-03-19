@@ -87,6 +87,7 @@ export class UserService {
     async saveServiceProvider(serviceProviderDto: ServiceProviderDto, files: Express.Multer.File[] | {
         [fieldname: string]: Express.Multer.File[];
     } | undefined): Promise<void> { 
+        
         let fileImageDocumentVehicle: Express.Multer.File | undefined = undefined;
         let fileImageCnh: Express.Multer.File | undefined = undefined;
         if(!files){
@@ -110,15 +111,13 @@ export class UserService {
         if(!fileImageCnh){
             throw new CustomException("Image cnh is required", 400);
         }
+
         try {
             await this.findUserByIdentifierOrEmailOrCnh(serviceProviderDto.user_dto.identifier, serviceProviderDto.user_dto.email, serviceProviderDto.cnh);
             serviceProviderDto.user_dto.vehicle.path_to_document = fileImageDocumentVehicle.path;
             serviceProviderDto.path_to_image_cnh = fileImageCnh.path;
-            const serviceProvider: Prisma.UserCreateInput = await this.createServiceUserCreateInput(serviceProviderDto);    
-            
-            const saveServiceProvider = await this.repository.saveServiceProvider(serviceProvider);   
-            await this.serviceProviderServiceRepository.save(saveServiceProvider.ServiceProvider[0].id, serviceProviderDto.services_id);
-            
+            const serviceProvider: Prisma.UserCreateInput = await this.createServiceUserCreateInput(serviceProviderDto);     
+            await this.repository.saveServiceProvider(serviceProvider);
         } catch (error) {
             if(error instanceof CustomException ){
                 removeImage(fileImageCnh);
@@ -171,6 +170,11 @@ export class UserService {
                     created_at: serviceProviderDto.user_dto.created_at,
                     updated_at: serviceProviderDto.user_dto.updated_at,
                     path_to_image_cnh: serviceProviderDto.path_to_image_cnh,
+                    ServiceProviderService:{
+                        create: serviceProviderDto.services_id.map(serviceId => ({
+                            serviceId
+                        }))
+                    }
                 }
             },
             role: serviceProviderDto.user_dto.role,
@@ -178,6 +182,7 @@ export class UserService {
     }
 
     private async findUserByIdentifierOrEmailOrCnh(identifier: string, email: string, cnh: string){
+        
         const userReturn =  await this.repository.findUserByIdentifierOrEmailorCnh(identifier, email,cnh);
         if(userReturn !== null){
             throw new CustomException("User already exists", 409);
@@ -208,11 +213,12 @@ export class UserService {
             throw new CustomException("Email is incorrect", 401);
         }
         const randomToken = this.generateCodeRandomTokenPhone();
-        this.sendEmail(user.email, "Redefinição de Senha", this.createMessageEmail("car fix enterprise", user.full_name, randomToken));
+        await this.repository.updateTokenByEmail(sendTokenDto.email, randomToken);
+        await this.sendEmail(user.email, "Redefinição de Senha", this.createMessageEmail("car fix enterprise", user.full_name, randomToken));
     }
 
     async changePassword(changePasswordDto:ChangePasswordDto) {
-        await this.repository.updatePasswordFindByEmailAndToken(changePasswordDto.email,changePasswordDto.token, changePasswordDto.password);
+        await this.repository.updatePasswordFindByEmailAndToken(changePasswordDto.email,changePasswordDto.token, await this.encryptPassword(changePasswordDto.password));
     }
 
     private async encryptPassword(password: string):Promise<string> {
@@ -224,7 +230,7 @@ export class UserService {
     }
 
     private generateCodeRandomTokenPhone() {
-        const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+";
+        const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         let code = "";
         for (let i = 0; i < 6; i++) {
             const randomCharacters = Math.floor(Math.random() * characters.length);
@@ -246,7 +252,7 @@ export class UserService {
             from: process.env.EMAIL,
             to: recipient,
             subject: subject,
-            text: message
+            html: message
         };
 
         await transporter.sendMail(mailOptions);
