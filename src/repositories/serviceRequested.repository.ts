@@ -3,7 +3,6 @@ import {prisma} from "./log.repositories";
 
 export class ServiceRequestedRepository {
     async createServiceRequested(data: ServiceRequested): Promise<ServiceRequested> {
-        console.log(data);
         return await prisma.serviceRequested.create({
             data
         });
