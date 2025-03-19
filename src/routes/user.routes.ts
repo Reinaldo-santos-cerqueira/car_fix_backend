@@ -16,7 +16,7 @@ userRouter.post("/users/service_provider",
     ]),
     ValidationServiceProviderDtoMiddlewares.validateUser(),
     async (req: Request, res: Response) => {
-        return await controller.saveClient(req, res);
+        return await controller.saveServiceProvider(req, res);
     }
 );
 
