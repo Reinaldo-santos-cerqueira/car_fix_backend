@@ -1,0 +1,6 @@
+serviceRequested {
+    0 - buscando motorista | solicitado
+    1 - aceito pelo motorista
+    2 - em progresso
+    3 - finalizado
+}

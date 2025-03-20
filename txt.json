@@ -1,0 +1,39 @@
+{
+    "user_dto":{
+        "full_name": "João da Silva",
+        "phone_number": "11987654321",
+        "email": "joao.silva@example.com",
+        "identifier": "11111111111",
+        "password": "senhaSegura123",
+        "created_at": "2025-03-03T10:00:00Z",
+        "updated_at": "2025-03-03T10:00:00Z",
+        "token_phone": "123456",
+        "token_password_change": "654321",
+        "type": "admin",
+        "address_id": "f8b0c9d1-e2c4-4a91-bcb5-e1b557fb5b64",
+        "address": {
+            "neighborhood": "Centro",
+            "street": "Rua Exemplo",
+            "number": "123",
+            "city": "São Paulo",
+            "state": "SP",
+            "cep": "01010000",
+            "complement": "Apto 301",
+            "created_at": "2025-03-03T10:00:00Z",
+            "updated_at": "2025-03-03T10:00:00Z"
+        },
+        "vehicle": {
+            "model": "Sable LS 3.0 V6",
+            "color": "Prata",
+            "mark": "Mercury",
+            "plate": "GUD-3290",
+            "path_to_document": "/home/king/Downloads/location.png",
+            "created_at": "2025-03-03T10:00:00Z",
+            "updated_at": "2025-03-03T10:00:00Z"
+        },
+        "role": "admin"
+    },
+    "path_to_image_cnh":"/home",
+    "cnh":"09429246026",
+    "services_id": ["f815b6e8-1747-4c87-bc32-5efe36555b14"]
+}

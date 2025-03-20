@@ -57,7 +57,6 @@ model ServiceProvider {
   user                   User                     @relation(fields: [user_id], references: [id])
   ServiceProviderService ServiceProviderService[]
   ServiceRequested       ServiceRequested[]
-  ServiceProviderOnline ServiceProviderOnline[]
 }
 
 model Service {
@@ -68,6 +67,7 @@ model Service {
   price_km_traveled      Float                    @default(0.00)
   created_at             DateTime                 @default(now())
   updated_at             DateTime                 @updatedAt
+  user_id                String                   @db.Uuid
   ServiceProviderService ServiceProviderService[]
   ServiceRequested       ServiceRequested[]
 }
@@ -96,37 +96,18 @@ model ServiceProviderService {
 }
 
 model ServiceRequested {
-  id                            String           @id @default(uuid()) @db.Uuid
-  service_provider_id           String?          @db.Uuid
-  service_id                    String           @db.Uuid
-  user_id                       String           @db.Uuid
-  user_socket_io_id             String?
-  service_provider_socket_io_id String?
-  status                        Int              @default(0)
-  latitude_client               Float?
-  longitude_client              Float?
-  latitude_service_provider     Float?
-  longitude_service_provider    Float?
-  created_at                    DateTime         @default(now())
-  updated_at                    DateTime         @updatedAt
-  service_provider              ServiceProvider? @relation(fields: [service_provider_id], references: [id])
-  service                       Service          @relation(fields: [service_id], references: [id])
-  user                          User             @relation(fields: [user_id], references: [id])
-}
-
-model ServiceProviderOnline {
-  id                  String  @id @default(uuid()) @db.Uuid
-  service_provider_id String  @db.Uuid @unique
-  socket_io_id        String
-  state               Int
-  service_provider    ServiceProvider? @relation(fields: [service_provider_id], references: [id])
-}
-
-model Log {
-  id          String   @id @default(uuid())
-  tableName   String  
-  action      String  
-  oldData     Json?   
-  newData     Json?   
-  timestamp   DateTime @default(now())
+  id                         String          @id @default(uuid()) @db.Uuid
+  service_provider_id        String          @db.Uuid
+  service_id                 String          @db.Uuid
+  user_id                    String          @db.Uuid
+  status                     String          @default("IN PROGRESS")
+  latitude_client            Float?
+  longitude_client           Float?
+  latitude_service_provider  Float?
+  longitude_service_provider Float?
+  created_at                 DateTime        @default(now())
+  updated_at                 DateTime        @updatedAt
+  service_provider           ServiceProvider @relation(fields: [service_provider_id], references: [id])
+  service                    Service         @relation(fields: [service_id], references: [id])
+  user                       User            @relation(fields: [user_id], references: [id])
 }

@@ -3,7 +3,7 @@ import { plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
 import { UserDto } from "../dto/user.dto";
 
-export class ValidationUserDtoMiddlewares {
+export class ValidationDtoMiddlewares {
     static validateUser() {
         return async (req: Request, res: Response, next: NextFunction) => {
             if (req.body.data) {
