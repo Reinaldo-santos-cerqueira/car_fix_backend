@@ -57,7 +57,6 @@ export class SocketService {
         const paramsRequestClient = requestedServiceDb.latitude_client + "," + requestedServiceDb.longitude_client;
         const paramsRequest = paramsRequestServiceProvider + ";" + paramsRequestClient;
         const urlRequest = `http://router.project-osrm.org/route/v1/driving/${paramsRequest}?overview=false`;
-        console.log(urlRequest);
         let distance = 0;
         let duration = 0;
         const response = await fetch(urlRequest);
