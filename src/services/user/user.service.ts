@@ -79,7 +79,7 @@ export class UserService {
 
     private async findUserByIdentifierOrEmail(identifier: string, email: string){
         const userReturn =  await this.repository.findUserByIdentifierOrEmail(identifier, email);
-        if(userReturn !== null){
+        if(userReturn !== null){            
             throw new CustomException("User already exists", 409);
         }
     }
