@@ -1,5 +1,6 @@
 import {  ServiceRequested } from "@prisma/client";
 import {prisma} from "./log.repositories";
+import { aceptService } from "@utils";
 
 export class ServiceRequestedRepository {
     async createServiceRequested(data: ServiceRequested): Promise<ServiceRequested> {
@@ -8,14 +9,17 @@ export class ServiceRequestedRepository {
         });
     }
 
-    async updateServiceRequested(id: string, serviceProviderID: string,status: number): Promise<ServiceRequested> {
+    async updateServiceRequested(data:aceptService): Promise<ServiceRequested> {
         return await prisma.serviceRequested.update({
             where: {
-                id
+                id: data.serviceRequestedId
             },
             data: {
-                service_provider_id: serviceProviderID,
-                status
+                service_provider_id: data.serviceProviderId,
+                service_provider_socket_io_id: data.serviceProviderSocketId,
+                status: data.status,
+                latitude_service_provider: data.latitudeServiceProvider,
+                longitude_service_provider: data.longitudeServiceProvider
             }
         });
     }
