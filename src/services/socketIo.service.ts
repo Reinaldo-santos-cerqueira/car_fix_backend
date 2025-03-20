@@ -1,6 +1,6 @@
 import { ServiceProviderOnline, ServiceRequested } from "@prisma/client";
 import { ServiceProviderOnlinerepository, ServiceRequestedRepository } from "@repositories";
-import { ServiceProviderSignupSocketIoRequest } from "@utils";
+import { AcceptedServiceToServiceProvider, aceptService, LegData, ServiceProviderSignupSocketIoRequest } from "@utils";
 
 export class SocketService {
     private readonly serviceProviderRepo: ServiceProviderOnlinerepository;
@@ -49,5 +49,26 @@ export class SocketService {
         await this.serviceRequestedRepo.createServiceRequested(msg);
         const serviceProviderOnline:ServiceProviderOnline[]  = await this.serviceProviderRepo.findByState(); 
         return serviceProviderOnline;
+    }
+
+    public async aceptServiceByServiceProvider(msg: aceptService): Promise<AcceptedServiceToServiceProvider> {
+        const requestedServiceDb = await this.serviceRequestedRepo.updateServiceRequested(msg);
+        const paramsRequestServiceProvider = msg.latitudeServiceProvider + "," + msg.longitudeServiceProvider;
+        const paramsRequestClient = requestedServiceDb.latitude_client + "," + requestedServiceDb.longitude_client;
+        const paramsRequest = paramsRequestServiceProvider + ";" + paramsRequestClient;
+        const urlRequest = `http://router.project-osrm.org/route/v1/driving/${paramsRequest}?overview=false`;
+        console.log(urlRequest);
+        let distance = 0;
+        let duration = 0;
+        const response = await fetch(urlRequest);
+        const data = await response.json();
+        if (data.code === "Ok") {
+            const route = data.routes[0];    
+            route.legs.forEach((leg: LegData) => {
+                distance = distance + leg.distance;
+                duration = duration + leg.duration;
+            });
+        }
+        return {distance, duration: duration/60, requestedService: requestedServiceDb};
     }
 }
