@@ -1,7 +1,7 @@
 import { Server, Socket } from "socket.io";
 import { SocketService } from "@services";
 import { ServiceProviderOnline, ServiceRequested } from "@prisma/client";
-import { aceptService } from "@utils";
+import { AceptService } from "@utils";
 
 export class SocketController {
     private readonly io: Server;
@@ -37,7 +37,7 @@ export class SocketController {
         });
     }
 
-    public async handleAcceptServiceToServiceProvider(socket: Socket, msg: aceptService){
+    public async handleAcceptServiceToServiceProvider(socket: Socket, msg: AceptService){
         if (!msg) {
             this.sendError(socket, "Os dados do serviço são obrigatórios.");
             return null;
