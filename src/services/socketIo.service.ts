@@ -1,6 +1,6 @@
 import { ServiceProviderOnline, ServiceRequested } from "@prisma/client";
 import { ServiceProviderOnlinerepository, ServiceRequestedRepository } from "@repositories";
-import { AcceptedServiceToServiceProvider, AceptService, LegData, ServiceProviderSignupSocketIoRequest } from "@utils";
+import { AcceptedServiceToServiceProvider, AceptService, CanceledService, ConfirmedStartService, LegData, ServiceProviderSignupSocketIoRequest } from "@utils";
 
 export class SocketService {
     private readonly serviceProviderRepo: ServiceProviderOnlinerepository;
@@ -56,7 +56,7 @@ export class SocketService {
         if (returnRequestById?.status !==0) {
             return null;
         }
-        const requestedServiceDb = await this.serviceRequestedRepo.updateServiceRequested(msg);
+        const requestedServiceDb = await this.serviceRequestedRepo.updateServiceRequestedProviderService(msg);
         const paramsRequestServiceProvider = msg.latitudeServiceProvider + "," + msg.longitudeServiceProvider;
         const paramsRequestClient = requestedServiceDb.latitude_client + "," + requestedServiceDb.longitude_client;
         const paramsRequest = paramsRequestServiceProvider + ";" + paramsRequestClient;
@@ -73,5 +73,24 @@ export class SocketService {
             });
         }
         return {distance, duration: duration/60, requestedService: requestedServiceDb};
+    }
+
+    public async aceptServiceByClient(msg: ConfirmedStartService): Promise<ServiceRequested | void> {
+        const returnRequestById = await this.serviceRequestedRepo.findById(msg.serviceRequestedId);
+        if (returnRequestById?.status !== 1) {
+            return;
+        }
+        return await this.serviceRequestedRepo.updateServiceRequestedClient(msg);
+    }
+
+    public async canceledService(msg: CanceledService): Promise<{socketIoIdClient: string, socketIoIdServiceProvider: string} | null> {
+        const returnDb = await this.serviceRequestedRepo.canceledServiceRequested(msg);
+        if (returnDb) {
+            if (returnDb.service_provider_socket_io_id && returnDb.user_id_socket_io_id) {
+                return { socketIoIdClient: returnDb.user_id_socket_io_id, socketIoIdServiceProvider: returnDb.service_provider_socket_io_id };
+                
+            }
+        }
+        return null;
     }
 }

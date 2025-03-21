@@ -26,6 +26,10 @@ export function setupSocket(server: HttpServer): SocketIOServer {
             await socketController.handleAcceptServiceToServiceProvider(socket, JSON.parse(msg))
         );
 
+        socket.on("accept_service_client", async (msg: string) =>
+            await socketController.handleAcceptServiceToServiceProvider(socket, JSON.parse(msg))
+        );
+
         socket.on("disconnect", () =>
             socketController.handleDisconnect(socket)
         );

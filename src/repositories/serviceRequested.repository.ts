@@ -1,6 +1,6 @@
 import {  ServiceRequested } from "@prisma/client";
 import {prisma} from "./log.repositories";
-import { AceptService } from "@utils";
+import { AceptService, CanceledService, ConfirmedStartService } from "@utils";
 
 export class ServiceRequestedRepository {
     async createServiceRequested(data: ServiceRequested): Promise<ServiceRequested> {
@@ -9,7 +9,7 @@ export class ServiceRequestedRepository {
         });
     }
 
-    async updateServiceRequested(data:AceptService): Promise<ServiceRequested> {
+    async updateServiceRequestedProviderService(data:AceptService): Promise<ServiceRequested> {
         return await prisma.serviceRequested.update({
             where: {
                 id: data.serviceRequestedId
@@ -24,10 +24,32 @@ export class ServiceRequestedRepository {
         });
     }
 
+    async updateServiceRequestedClient(data: ConfirmedStartService): Promise<ServiceRequested> {
+        return await prisma.serviceRequested.update({
+            where: {
+                id: data.serviceRequestedId
+            },
+            data: {
+                status: data.status
+            }
+        });
+    }
+
     async findById(id: string): Promise<ServiceRequested | null> {
         return await prisma.serviceRequested.findUnique({
             where: {
                 id
+            }
+        });
+    }
+
+    public async canceledServiceRequested(data: CanceledService): Promise<ServiceRequested | null> {
+        return await prisma.serviceRequested.update({
+            where: {
+                id: data.serviceRequestedId
+            },
+            data: {
+                status: 5
             }
         });
     }

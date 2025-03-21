@@ -20,6 +20,15 @@ export interface AceptService {
     status: number;
 }
 
+export interface ConfirmedStartService {
+    serviceRequestedId: string;
+    status: number;
+}
+
+export interface CanceledService {
+    serviceRequestedId: string;
+}
+
 export interface LegData {
     steps: [];
     summary: string;

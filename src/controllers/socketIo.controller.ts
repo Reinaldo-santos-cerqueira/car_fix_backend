@@ -1,7 +1,7 @@
 import { Server, Socket } from "socket.io";
 import { SocketService } from "@services";
 import { ServiceProviderOnline, ServiceRequested } from "@prisma/client";
-import { AceptService } from "@utils";
+import { AceptService, CanceledService, ConfirmedStartService } from "@utils";
 
 export class SocketController {
     private readonly io: Server;
@@ -37,10 +37,10 @@ export class SocketController {
         });
     }
 
-    public async handleAcceptServiceToServiceProvider(socket: Socket, msg: AceptService){
+    public async handleAcceptServiceToServiceProvider(socket: Socket, msg: AceptService):Promise<void>{
         if (!msg) {
             this.sendError(socket, "Os dados do serviço são obrigatórios.");
-            return null;
+            return;
         }
         msg.serviceProviderSocketId = socket.id;
         
@@ -49,9 +49,40 @@ export class SocketController {
             if (returnAccept.requestedService.user_id_socket_io_id){
                 this.io.to(returnAccept.requestedService.user_id_socket_io_id).emit("accepted_service", returnAccept);
             }
+            return;
         }
-        this.sendError(socket, "Serviço não mais disponivel.");
+        this.sendError(socket, "Serviço não mais disponivel.");    
+        return;
+    }
 
+    public async handleAcceptServiceToClient(socket: Socket, msg: ConfirmedStartService) {
+        if (!msg) {
+            this.sendError(socket, "Os dados do serviço são obrigatórios.");
+            return;
+        }
+        const returnAccept = await this.socketService.aceptServiceByClient(msg);
+        if (returnAccept) {
+            if (returnAccept.service_provider_socket_io_id) {
+                this.io.to(returnAccept.service_provider_socket_io_id).emit("confirmed_start_service", returnAccept);
+            }
+            if (returnAccept.user_id_socket_io_id) {
+                this.io.to(returnAccept.user_id_socket_io_id).emit("confirmed_start_service", returnAccept);
+            }
+        }
+        this.sendError(socket, "Serviço não pode ser aceito no momento continue esperando.");
+        return;
+    }
+
+    public async handleCanceledService(socket: Socket, msg: CanceledService) {
+        if (!msg) {
+            this.sendError(socket, "Os dados do serviço são obrigatórios.");
+            return;
+        }
+        const returnServiceRequested = await this.socketService.canceledService(msg);
+        if (returnServiceRequested) {
+            this.io.to(returnServiceRequested.socketIoIdClient).emit("canceled_service", msg);
+            this.io.to(returnServiceRequested.socketIoIdServiceProvider).emit("canceled_service", msg);
+        }
     }
 
     public async handleDisconnect(socket: Socket) {
