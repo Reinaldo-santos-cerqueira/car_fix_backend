@@ -6,14 +6,12 @@ export function setupSocket(server: HttpServer): SocketIOServer {
     const io = new SocketIOServer(server, {
         cors: {
             origin: "*",
-            methods: ["GET", "POST"],
         },
     });
 
     const socketController = new SocketController(io);
 
-    io.on("connection", (socket: Socket) => {
-
+    io.on("connection", (socket: Socket) => {        
         socket.on("signup_provider_service", (msg) =>
             socketController.handleSignupProviderService(socket, msg)
         );
@@ -27,7 +25,7 @@ export function setupSocket(server: HttpServer): SocketIOServer {
         );
 
         socket.on("accept_service_client", async (msg: string) =>
-            await socketController.handleAcceptServiceToServiceProvider(socket, JSON.parse(msg))
+            await socketController.handleAcceptServiceToClient(socket, JSON.parse(msg))
         );
 
         socket.on("disconnect", () =>
@@ -36,5 +34,4 @@ export function setupSocket(server: HttpServer): SocketIOServer {
     });
 
     return io;
-
 }
