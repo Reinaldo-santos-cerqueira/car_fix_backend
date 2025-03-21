@@ -1,6 +1,6 @@
 import { ServiceProviderOnline, ServiceRequested } from "@prisma/client";
 import { ServiceProviderOnlinerepository, ServiceRequestedRepository } from "@repositories";
-import { AcceptedServiceToServiceProvider, aceptService, LegData, ServiceProviderSignupSocketIoRequest } from "@utils";
+import { AcceptedServiceToServiceProvider, AceptService, LegData, ServiceProviderSignupSocketIoRequest } from "@utils";
 
 export class SocketService {
     private readonly serviceProviderRepo: ServiceProviderOnlinerepository;
@@ -51,7 +51,7 @@ export class SocketService {
         return serviceProviderOnline;
     }
 
-    public async aceptServiceByServiceProvider(msg: aceptService): Promise<AcceptedServiceToServiceProvider> {
+    public async aceptServiceByServiceProvider(msg: AceptService): Promise<AcceptedServiceToServiceProvider> {
         const requestedServiceDb = await this.serviceRequestedRepo.updateServiceRequested(msg);
         const paramsRequestServiceProvider = msg.latitudeServiceProvider + "," + msg.longitudeServiceProvider;
         const paramsRequestClient = requestedServiceDb.latitude_client + "," + requestedServiceDb.longitude_client;

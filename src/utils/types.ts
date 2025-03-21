@@ -1,3 +1,5 @@
+import { ServiceRequested } from "@prisma/client";
+
 export type DateString = string | Date | undefined;
 export interface ServiceRequest {
     created_at: string;
@@ -30,4 +32,10 @@ export interface ServiceProviderSignupSocketIoRequest {
     socketIoId: string,
     serviceProviderId: string,
     state: number
+}
+
+export type AcceptedServiceToServiceProvider = {
+    distance: number,
+    duration: number,
+    requestedService: ServiceRequested
 }

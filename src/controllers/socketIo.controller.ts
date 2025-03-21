@@ -30,7 +30,7 @@ export class SocketController {
             this.sendError(socket, "Os dados do serviço são obrigatórios.");
             return;
         }
-        msg.user_socket_io_id = socket.id;
+        msg.user_id_socket_io_id = socket.id;
         const arrayServiceProviderOnline:ServiceProviderOnline[] = await this.socketService.sendRequestedService(msg);       
         arrayServiceProviderOnline.forEach( (item) => {
             this.io.to(item.socket_io_id).emit("received_service", msg);
@@ -46,8 +46,8 @@ export class SocketController {
         
         const returnAccept = await this.socketService.aceptServiceByServiceProvider(msg);
         if(returnAccept){
-            if(returnAccept.requestedService.user_socket_io_id){
-                this.io.to(returnAccept.requestedService.user_socket_io_id).emit("accepted_service", returnAccept);
+            if (returnAccept.requestedService.user_id_socket_io_id){
+                this.io.to(returnAccept.requestedService.user_id_socket_io_id).emit("accepted_service", returnAccept);
             }
         }
 
