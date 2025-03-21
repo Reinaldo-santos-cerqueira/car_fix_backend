@@ -50,6 +50,7 @@ export class SocketController {
                 this.io.to(returnAccept.requestedService.user_id_socket_io_id).emit("accepted_service", returnAccept);
             }
         }
+        this.sendError(socket, "Serviço não mais disponivel.");
 
     }
 

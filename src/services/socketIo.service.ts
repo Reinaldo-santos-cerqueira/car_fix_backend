@@ -51,7 +51,11 @@ export class SocketService {
         return serviceProviderOnline;
     }
 
-    public async aceptServiceByServiceProvider(msg: AceptService): Promise<AcceptedServiceToServiceProvider> {
+    public async aceptServiceByServiceProvider(msg: AceptService): Promise<AcceptedServiceToServiceProvider | null> {
+        const returnRequestById =  await this.serviceRequestedRepo.findById(msg.serviceRequestedId);
+        if (returnRequestById?.status !==0) {
+            return null;
+        }
         const requestedServiceDb = await this.serviceRequestedRepo.updateServiceRequested(msg);
         const paramsRequestServiceProvider = msg.latitudeServiceProvider + "," + msg.longitudeServiceProvider;
         const paramsRequestClient = requestedServiceDb.latitude_client + "," + requestedServiceDb.longitude_client;

@@ -23,4 +23,12 @@ export class ServiceRequestedRepository {
             }
         });
     }
+
+    async findById(id: string): Promise<ServiceRequested | null> {
+        return await prisma.serviceRequested.findUnique({
+            where: {
+                id
+            }
+        });
+    }
 }
