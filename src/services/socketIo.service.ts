@@ -53,7 +53,7 @@ export class SocketService {
 
     public async aceptServiceByServiceProvider(msg: AceptService): Promise<AcceptedServiceToServiceProvider | null> {
         const returnRequestById =  await this.serviceRequestedRepo.findById(msg.serviceRequestedId);
-        if (returnRequestById?.status !==0) {
+        if (returnRequestById?.status !== 0) {
             return null;
         }
         const requestedServiceDb = await this.serviceRequestedRepo.updateServiceRequestedProviderService(msg);
@@ -61,17 +61,18 @@ export class SocketService {
         const paramsRequestClient = requestedServiceDb.latitude_client + "," + requestedServiceDb.longitude_client;
         const paramsRequest = paramsRequestServiceProvider + ";" + paramsRequestClient;
         const urlRequest = `http://router.project-osrm.org/route/v1/driving/${paramsRequest}?overview=false`;
-        let distance = 0;
-        let duration = 0;
-        const response = await fetch(urlRequest);
-        const data = await response.json();
-        if (data.code === "Ok") {
-            const route = data.routes[0];    
-            route.legs.forEach((leg: LegData) => {
-                distance = distance + leg.distance;
-                duration = duration + leg.duration;
-            });
-        }
+        console.log(urlRequest);
+        const distance = 0;
+        const duration = 0;
+        // const response = await fetch(urlRequest);
+        // const data = await response.json();
+        // if (data.code === "Ok") {
+        //     const route = data.routes[0];    
+        //     route.legs.forEach((leg: LegData) => {
+        //         distance = distance + leg.distance;
+        //         duration = duration + leg.duration;
+        //     });
+        // }
         return {distance, duration: duration/60, requestedService: requestedServiceDb};
     }
 
