@@ -30,8 +30,11 @@ export class SocketController {
             this.sendError(socket, "Os dados do serviço são obrigatórios.");
             return;
         }
+
         msg.user_id_socket_io_id = socket.id;
-        const arrayServiceProviderOnline:ServiceProviderOnline[] = await this.socketService.sendRequestedService(msg);       
+
+        const arrayServiceProviderOnline:ServiceProviderOnline[] = await this.socketService.sendRequestedService(msg); 
+
         arrayServiceProviderOnline.forEach( (item) => {
             this.io.to(item.socket_io_id).emit("received_service", msg);
         });
@@ -42,17 +45,19 @@ export class SocketController {
             this.sendError(socket, "Os dados do serviço são obrigatórios.");
             return;
         }
+
         msg.serviceProviderSocketId = socket.id;
         
         const returnAccept = await this.socketService.aceptServiceByServiceProvider(msg);
+
         if(returnAccept){
             if (returnAccept.requestedService.user_id_socket_io_id){
                 this.io.to(returnAccept.requestedService.user_id_socket_io_id).emit("accepted_service", returnAccept);
             }
             return;
         }
+
         this.sendError(socket, "Serviço não mais disponivel.");    
-        return;
     }
 
     public async handleAcceptServiceToClient(socket: Socket, msg: ConfirmedStartService) {
@@ -60,7 +65,9 @@ export class SocketController {
             this.sendError(socket, "Os dados do serviço são obrigatórios.");
             return;
         }
+
         const returnAccept = await this.socketService.aceptServiceByClient(msg);
+
         if (returnAccept) {
             if (returnAccept.service_provider_socket_io_id) {
                 this.io.to(returnAccept.service_provider_socket_io_id).emit("confirmed_start_service", returnAccept);
@@ -68,9 +75,10 @@ export class SocketController {
             if (returnAccept.user_id_socket_io_id) {
                 this.io.to(returnAccept.user_id_socket_io_id).emit("confirmed_start_service", returnAccept);
             }
+            return;
         }
+
         this.sendError(socket, "Serviço não pode ser aceito no momento continue esperando.");
-        return;
     }
 
     public async handleCanceledService(socket: Socket, msg: CanceledService) {
@@ -78,7 +86,9 @@ export class SocketController {
             this.sendError(socket, "Os dados do serviço são obrigatórios.");
             return;
         }
+
         const returnServiceRequested = await this.socketService.canceledService(msg);
+
         if (returnServiceRequested) {
             this.io.to(returnServiceRequested.socketIoIdClient).emit("canceled_service", msg);
             this.io.to(returnServiceRequested.socketIoIdServiceProvider).emit("canceled_service", msg);
@@ -88,5 +98,4 @@ export class SocketController {
     public async handleDisconnect(socket: Socket) {
         await this.socketService.removeProviderBySocketId(socket.id);
     }
-
 }
