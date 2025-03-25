@@ -1,5 +1,4 @@
-import { Type } from "class-transformer";
-import { IsDate, IsOptional, IsString } from "class-validator";
+import {  IsOptional, IsString } from "class-validator";
 
 export class AddressDto {
     @IsString({ message: "Neighborhood must be a string" })
@@ -24,14 +23,6 @@ export class AddressDto {
     @IsString({ message: "Complement must be a string" })
         complement?: string;
     
-    @Type(() => Date)
-    @IsDate({ message: "Created date must be a valid date" })
-        created_at: Date;
-    
-    @Type(() => Date)    
-    @IsDate({ message: "Updated date must be a valid date" })
-        updated_at: Date;
-    
     constructor(
         neighborhood: string,
         street: string,
@@ -39,8 +30,6 @@ export class AddressDto {
         city: string,
         state: string,
         cep: string,
-        created_at: Date,
-        updated_at: Date,
         complement?: string
     ) {
         this.neighborhood = neighborhood;
@@ -50,7 +39,5 @@ export class AddressDto {
         this.state = state;
         this.cep = cep;
         this.complement = complement;
-        this.created_at = created_at;
-        this.updated_at = updated_at;
     }
 }

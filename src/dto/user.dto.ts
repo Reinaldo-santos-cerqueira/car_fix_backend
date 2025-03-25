@@ -54,22 +54,12 @@ export class UserDto {
     @IsString({ message: "Role must be a string" })
         role?: string;
 
-    @Type(() => Date)
-    @IsDate({ message: "Created at must be a valid date" })
-        created_at: Date;
-
-    @Type(() => Date)
-    @IsDate({ message: "Updated at must be a valid date" })
-        updated_at: Date;
-
     constructor(
         full_name: string,
         phone_number: string,
         email: string,
         identifier: string,
         password: string,
-        created_at: Date,
-        updated_at: Date,
         address: AddressDto,
         vehicle: VehicleDto,
         token_phone?: string,
@@ -83,8 +73,6 @@ export class UserDto {
         this.email = email;
         this.identifier = identifier;
         this.password = password;
-        this.created_at = created_at;
-        this.updated_at = updated_at;
         this.token_phone = token_phone;
         this.token_password_change = token_password_change;
         this.type = type;
