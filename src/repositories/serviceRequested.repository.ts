@@ -1,5 +1,5 @@
 import {  ServiceRequested } from "@prisma/client";
-import {prisma} from "./log.repositories";
+import {prisma} from "./log.repository";
 import { AceptService, CanceledService, ConfirmedStartService } from "@utils";
 
 export class ServiceRequestedRepository {

@@ -1,5 +1,5 @@
-export * from "./user/userRepositories";
-export * from "./log.repositories";
+export * from "./userRepository";
+export * from "./log.repository";
 export * from "./serviceProviderOnline.repository";
 export * from "./serviceProviderService.repository";
 export * from "./serviceRequested.repository";

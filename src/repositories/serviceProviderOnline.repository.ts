@@ -1,5 +1,5 @@
 import { ServiceProviderOnline} from "@prisma/client";
-import {prisma} from "./log.repositories";
+import {prisma} from "./log.repository";
 
 export class ServiceProviderOnlinerepository{
 
