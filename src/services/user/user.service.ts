@@ -7,6 +7,7 @@ import fs from "fs";
 import path from "path";
 import { createTransport } from "nodemailer";
 import dotenv from "dotenv";
+import jwt from "jsonwebtoken";
 
 dotenv.config();
 
@@ -177,16 +178,32 @@ export class UserService {
         if(userReturn !== null){
             throw new CustomException("User already exists", 409);
         }
+
     }
 
-    async loginClient(loginDto: LoginDto) {
+    async loginClient(loginDto: LoginDto): Promise<{
+        token: string,
+        user: { id: string, identifier: string }
+    }> {
         const user = await this.repository.findByEmail(loginDto.email);
         if (!user || !(await this.comparePassword(loginDto.password, user.password))) {
             throw new CustomException("Email or password incorrect", 401);
         }
+        const token = jwt.sign({ foo: "bar" }, process.env.TOKEN + "", { algorithm: "RS256" });
+        return {
+            token: token,
+            user: {
+                id: user.id,
+                identifier: user.identifier
+            },
+        };   
     }
 
-    async loginServiceProvider(loginDto: LoginDto): Promise<string[]> {
+    async loginServiceProvider(loginDto: LoginDto): Promise<{
+        serviceIds: string[],
+        token: string,
+        user: { id: string, identifier: string }
+    }> {
         const user = await this.repository.findByEmailAndSelectService(loginDto.email);
         if (!user || !(await this.comparePassword(loginDto.password, user.password))) {
             throw new CustomException("Email or password incorrect", 401);
@@ -194,7 +211,15 @@ export class UserService {
         const serviceIds = user?.ServiceProvider.flatMap(sp =>
             sp.ServiceProviderService.map(sps => sps.serviceId)
         ) || [];
-        return serviceIds;
+        const token = jwt.sign({ foo: "bar" }, process.env.TOKEN + "", { algorithm: "RS256" });
+        return {
+            serviceIds: serviceIds,
+            token: token,
+            user: {
+                id: user.id,
+                identifier: user.identifier
+            },
+        };
     }
 
     async sendByTokenTradePassword(sendTokenDto: SendTokenDto) {

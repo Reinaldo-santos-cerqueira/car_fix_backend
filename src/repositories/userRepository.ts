@@ -45,6 +45,9 @@ export class UserRepository{
                 email: email,
             },
             select: {
+                id: true,
+                email: true,
+                identifier: true,
                 password: true,
                 ServiceProvider: {
                     select: {
