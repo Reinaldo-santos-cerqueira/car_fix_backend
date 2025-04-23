@@ -1,7 +1,7 @@
 import { CustomException } from "@exceptions";
 import { PrismaClient, Prisma, User } from "@prisma/client";
 
-export class UserRepository{
+export class UserRepository {
     prisma = new PrismaClient();
 
     async saveClient(user: Prisma.UserCreateInput): Promise<Prisma.UserCreateInput> {
@@ -10,17 +10,17 @@ export class UserRepository{
         });
     }
 
-    async saveServiceProvider(user: Prisma.UserCreateInput): Promise<{ ServiceProvider: { id: string; created_at: Date; updated_at: Date; path_to_image_cnh: string | null; cnh: string; user_id: string; }[]}> {
+    async saveServiceProvider(user: Prisma.UserCreateInput): Promise<{ ServiceProvider: { id: string; created_at: Date; updated_at: Date; path_to_image_cnh: string | null; cnh: string; user_id: string; }[] }> {
         return await this.prisma.user.create({
             data: user,
-            select:{
+            select: {
                 ServiceProvider: true
             }
         });
     }
 
 
-    async findUserByIdentifierOrEmail(identifier: string, email: string): Promise<Prisma.UserCreateInput | null> {      
+    async findUserByIdentifierOrEmail(identifier: string, email: string): Promise<Prisma.UserCreateInput | null> {
         return await this.prisma.user.findFirst({
             where: {
                 OR: [
@@ -43,6 +43,13 @@ export class UserRepository{
         return await this.prisma.user.findUnique({
             where: {
                 email: email,
+                ServiceProvider: {
+                    some: {
+                        ServiceProviderService: {
+                            some: {}
+                        }
+                    }
+                },
             },
             select: {
                 id: true,
@@ -62,21 +69,21 @@ export class UserRepository{
         });
     }
 
-    async findUserByIdentifierOrEmailorCnh(identifier: string, email: string,cnh: string): Promise<User | null> {      
+    async findUserByIdentifierOrEmailorCnh(identifier: string, email: string, cnh: string): Promise<User | null> {
         return await this.prisma.user.findFirst({
             where: {
                 OR: [
                     { identifier: identifier },
                     { email: email },
-                    {ServiceProvider: {some: {cnh: cnh}},}
+                    { ServiceProvider: { some: { cnh: cnh } }, }
                 ],
             },
-            include:{
+            include: {
                 ServiceProvider: true
             }
         });
     }
-    
+
     async findByEmailAndToken(email: string, randomToken: string): Promise<User | null> {
         return await this.prisma.user.findFirst({
             where: {
@@ -86,7 +93,7 @@ export class UserRepository{
         });
     }
 
-    async updatePasswordFindByEmailAndToken(email: string, randomToken: string, password: string): Promise<User | null>  {
+    async updatePasswordFindByEmailAndToken(email: string, randomToken: string, password: string): Promise<User | null> {
         try {
             return await this.prisma.user.update({
                 where: { email, token_password_change: randomToken },

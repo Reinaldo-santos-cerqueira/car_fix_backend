@@ -1,28 +1,29 @@
-import {  IsOptional, IsString } from "class-validator";
+/* eslint-disable indent */
+import { IsOptional, IsString } from "class-validator";
 
 export class AddressDto {
     @IsString({ message: "Neighborhood must be a string" })
-        neighborhood: string;
-  
+    neighborhood: string;
+
     @IsString({ message: "Street must be a string" })
-        street: string;
-  
+    street: string;
+
     @IsString({ message: "Number must be a string" })
-        number: string;
-  
+    number: string;
+
     @IsString({ message: "City must be a string" })
-        city: string;
-  
+    city: string;
+
     @IsString({ message: "State must be a string" })
-        state: string;
-  
+    state: string;
+
     @IsString({ message: "CEP must be a string" })
-        cep: string;
-  
+    cep: string;
+
     @IsOptional()
     @IsString({ message: "Complement must be a string" })
-        complement?: string;
-    
+    complement?: string;
+
     constructor(
         neighborhood: string,
         street: string,

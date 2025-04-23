@@ -1,9 +1,10 @@
+/* eslint-disable indent */
+
 import {
     IsEmail,
     IsOptional,
     IsString,
     IsUUID,
-    IsDate,
     ValidateNested,
 } from "class-validator";
 import { AddressDto } from "./address.dto";
@@ -12,47 +13,47 @@ import { VehicleDto } from "./vehicle.dto";
 
 export class UserDto {
     @IsString({ message: "Full name must be a string" })
-        full_name: string;
+    full_name: string;
 
     @IsString({ message: "Phone number must be a string" })
-        phone_number: string;
+    phone_number: string;
 
     @IsEmail({}, { message: "Email must be a valid email address" })
-        email: string;
+    email: string;
 
     @IsString({ message: "Identifier must be a string" })
-        identifier: string;
+    identifier: string;
 
     @IsString({ message: "Password must be a string" })
-        password: string;
+    password: string;
 
     @IsOptional()
     @IsString({ message: "Token phone must be a string" })
-        token_phone?: string;
+    token_phone?: string;
 
     @IsOptional()
     @IsString({ message: "Token password change must be a string" })
-        token_password_change?: string;
+    token_password_change?: string;
 
     @IsOptional()
     @IsString({ message: "Type must be a string" })
-        type?: string;
+    type?: string;
 
     @IsOptional()
     @IsUUID(undefined, { message: "Address ID must be a valid UUID" })
-        address_id?: string;
+    address_id?: string;
 
     @ValidateNested({ message: "Address must be a valid address" })
     @Type(() => AddressDto)
-        address: AddressDto;
+    address: AddressDto;
 
     @ValidateNested({ message: "Vehicle must be a valid address" })
     @Type(() => VehicleDto)
-        vehicle: VehicleDto;    
+    vehicle: VehicleDto;
 
     @IsOptional()
     @IsString({ message: "Role must be a string" })
-        role?: string;
+    role?: string;
 
     constructor(
         full_name: string,
