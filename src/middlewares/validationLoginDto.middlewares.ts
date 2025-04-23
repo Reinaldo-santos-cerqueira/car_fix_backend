@@ -5,7 +5,7 @@ import { LoginDto } from "@dto";
 
 export class ValidationLoginDtoMiddlewares {
     static validateUser() {
-        return async (req: Request, res: Response, next: NextFunction) => {                
+        return async (req: Request, res: Response, next: NextFunction) => {
             const dto = plainToInstance(LoginDto, req.body);
 
             const errors = await validate(dto);

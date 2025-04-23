@@ -1,7 +1,7 @@
 import { ChangePasswordDto, LoginDto, SendTokenDto, ServiceProviderDto, UserDto } from "@dto";
 import { CustomException } from "@exceptions";
 import { Prisma } from "@prisma/client";
-import { UserRepository,ServiceProviderServiceRepository } from "@repositories";
+import { UserRepository, ServiceProviderServiceRepository } from "@repositories";
 import bcrypt from "bcrypt";
 import fs from "fs";
 import path from "path";
@@ -14,24 +14,24 @@ dotenv.config();
 export class UserService {
     repository: UserRepository;
     serviceProviderServiceRepository: ServiceProviderServiceRepository;
-    constructor(){
+    constructor() {
         this.repository = new UserRepository();
         this.serviceProviderServiceRepository = new ServiceProviderServiceRepository();
     }
 
-    async saveClient(userDto: UserDto, file: Express.Multer.File | undefined): Promise<void> { 
-        if(!file){
+    async saveClient(userDto: UserDto, file: Express.Multer.File | undefined): Promise<void> {
+        if (!file) {
             throw new CustomException("Image is required", 400);
         }
         try {
             await this.findUserByIdentifierOrEmail(userDto.identifier, userDto.email);
             userDto.vehicle.path_to_document = file.path;
-            const user: Prisma.UserCreateInput = await this.createClientUserCreateInput(userDto);    
-                
-            await this.repository.saveClient(user);   
-            
+            const user: Prisma.UserCreateInput = await this.createClientUserCreateInput(userDto);
+
+            await this.repository.saveClient(user);
+
         } catch (error) {
-            if(error instanceof CustomException ){
+            if (error instanceof CustomException) {
                 this.deleteImage(file);
                 throw new CustomException(error.message, error.statusCode);
             }
@@ -73,50 +73,50 @@ export class UserService {
         };
     }
 
-    private async findUserByIdentifierOrEmail(identifier: string, email: string){
-        const userReturn =  await this.repository.findUserByIdentifierOrEmail(identifier, email);
-        if(userReturn !== null){
+    private async findUserByIdentifierOrEmail(identifier: string, email: string) {
+        const userReturn = await this.repository.findUserByIdentifierOrEmail(identifier, email);
+        if (userReturn !== null) {
             throw new CustomException("User already exists", 409);
         }
     }
 
     async saveServiceProvider(serviceProviderDto: ServiceProviderDto, files: Express.Multer.File[] | {
         [fieldname: string]: Express.Multer.File[];
-    } | undefined): Promise<void> { 
+    } | undefined): Promise<void> {
         let fileImageDocumentVehicle: Express.Multer.File | undefined = undefined;
         let fileImageCnh: Express.Multer.File | undefined = undefined;
-        if(!files){
+        if (!files) {
             throw new CustomException("Images is required", 400);
         }
-        const fileArray: Express.Multer.File[] = Array.isArray(files) 
-            ? files 
+        const fileArray: Express.Multer.File[] = Array.isArray(files)
+            ? files
             : Object.values(files).flat();
 
         for (const file of fileArray) {
             if (file.fieldname === "imageDocumentVehicle") {
                 fileImageDocumentVehicle = file;
-            }else if(file.fieldname === "imageCnh"){
+            } else if (file.fieldname === "imageCnh") {
                 fileImageCnh = file;
             }
         }
 
-        if(!fileImageDocumentVehicle){
+        if (!fileImageDocumentVehicle) {
             throw new CustomException("Image document vehicle is required", 400);
         }
-        if(!fileImageCnh){
+        if (!fileImageCnh) {
             throw new CustomException("Image cnh is required", 400);
         }
         try {
             await this.findUserByIdentifierOrEmailOrCnh(serviceProviderDto.user_dto.identifier, serviceProviderDto.user_dto.email, serviceProviderDto.cnh);
             serviceProviderDto.user_dto.vehicle.path_to_document = fileImageDocumentVehicle.path;
             serviceProviderDto.path_to_image_cnh = fileImageCnh.path;
-            const serviceProvider: Prisma.UserCreateInput = await this.createServiceUserCreateInput(serviceProviderDto);    
-            
-            const saveServiceProvider = await this.repository.saveServiceProvider(serviceProvider);   
+            const serviceProvider: Prisma.UserCreateInput = await this.createServiceUserCreateInput(serviceProviderDto);
+
+            const saveServiceProvider = await this.repository.saveServiceProvider(serviceProvider);
             await this.serviceProviderServiceRepository.save(saveServiceProvider.ServiceProvider[0].id, serviceProviderDto.services_id);
-            
+
         } catch (error) {
-            if(error instanceof CustomException ){
+            if (error instanceof CustomException) {
                 this.deleteImage(fileImageCnh);
                 this.deleteImage(fileImageDocumentVehicle);
                 throw new CustomException(error.message, error.statusCode);
@@ -153,7 +153,7 @@ export class UserService {
             Vehicle: {
                 create: {
                     created_at: new Date(),
-                    updated_at: new Date(), 
+                    updated_at: new Date(),
                     model: serviceProviderDto.user_dto.vehicle.model,
                     color: serviceProviderDto.user_dto.vehicle.color,
                     mark: serviceProviderDto.user_dto.vehicle.mark,
@@ -173,9 +173,9 @@ export class UserService {
         };
     }
 
-    private async findUserByIdentifierOrEmailOrCnh(identifier: string, email: string, cnh: string){
-        const userReturn =  await this.repository.findUserByIdentifierOrEmailorCnh(identifier, email,cnh);
-        if(userReturn !== null){
+    private async findUserByIdentifierOrEmailOrCnh(identifier: string, email: string, cnh: string) {
+        const userReturn = await this.repository.findUserByIdentifierOrEmailorCnh(identifier, email, cnh);
+        if (userReturn !== null) {
             throw new CustomException("User already exists", 409);
         }
 
@@ -185,18 +185,20 @@ export class UserService {
         token: string,
         user: { id: string, identifier: string }
     }> {
+
         const user = await this.repository.findByEmail(loginDto.email);
+
         if (!user || !(await this.comparePassword(loginDto.password, user.password))) {
             throw new CustomException("Email or password incorrect", 401);
         }
-        const token = jwt.sign({ foo: "bar" }, process.env.TOKEN + "", { algorithm: "RS256" });
+        const token = jwt.sign({ foo: "bar" }, process.env.TOKEN + "");
         return {
             token: token,
             user: {
                 id: user.id,
                 identifier: user.identifier
             },
-        };   
+        };
     }
 
     async loginServiceProvider(loginDto: LoginDto): Promise<{
@@ -231,18 +233,18 @@ export class UserService {
         this.sendEmail(user.email, "Redefinição de Senha", this.createMessageEmail("car fix enterprise", user.full_name, randomToken));
     }
 
-    async changePassword(changePasswordDto:ChangePasswordDto) {
-        await this.repository.updatePasswordFindByEmailAndToken(changePasswordDto.email,changePasswordDto.token, changePasswordDto.password);
+    async changePassword(changePasswordDto: ChangePasswordDto) {
+        await this.repository.updatePasswordFindByEmailAndToken(changePasswordDto.email, changePasswordDto.token, changePasswordDto.password);
     }
 
-    private async deleteImage(file: Express.Multer.File){
+    private async deleteImage(file: Express.Multer.File) {
         const filePath = path.resolve(file.path);
         fs.unlink(filePath, (err) => {
-            if (err) {throw new CustomException(err.name + " " + err.code,);}
+            if (err) { throw new CustomException(err.name + " " + err.code,); }
         });
     }
 
-    private async encryptPassword(password: string):Promise<string> {
+    private async encryptPassword(password: string): Promise<string> {
         return await bcrypt.hash(password, 10);
     }
 
@@ -260,7 +262,7 @@ export class UserService {
         return code;
     }
 
-    private async sendEmail(recipient: string, subject:string, message: string) {
+    private async sendEmail(recipient: string, subject: string, message: string) {
         const transporter = createTransport({
             service: "gmail",
             auth: {
@@ -278,7 +280,7 @@ export class UserService {
 
         await transporter.sendMail(mailOptions);
     }
-    private createMessageEmail(enterprise: string,userName: string, randomToken: string): string {
+    private createMessageEmail(enterprise: string, userName: string, randomToken: string): string {
         return `
             <p>Olá, ${userName},</p>
             <p>Recebemos uma solicitação para redefinir sua senha. Para continuar com o processo, utilize o código abaixo:</p>

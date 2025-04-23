@@ -8,7 +8,8 @@ export class ValidationUserDtoMiddlewares {
         return async (req: Request, res: Response, next: NextFunction) => {
             if (req.body.data) {
                 req.body = JSON.parse(req.body.data);
-            }            
+            }
+
             const dto = plainToInstance(UserDto, req.body);
 
             const errors = await validate(dto);
@@ -21,7 +22,7 @@ export class ValidationUserDtoMiddlewares {
                     property: error.property,
                     messages: Object.values(error.constraints || {})
                 }));
-                if(!req.file || req.file === null){
+                if (!req.file || req.file === null) {
                     formattedErrors.push({
                         property: "Image document vehicle",
                         messages: ["Image document vehicle is required"]
@@ -33,7 +34,7 @@ export class ValidationUserDtoMiddlewares {
                     errors: formattedErrors
                 });
                 return;
-            }else if(!req.file || req.file === null){
+            } else if (!req.file || req.file === null) {
                 const formattedErrors: {
                     property: string;
                     messages: string[];

@@ -1,5 +1,5 @@
-import {  ServiceRequested } from "@prisma/client";
-import {prisma} from "./log.repository";
+import { ServiceRequested } from "@prisma/client";
+import { prisma } from "./log.repository";
 import { AceptService, CanceledService, ConfirmedStartService } from "@utils";
 
 export class ServiceRequestedRepository {
@@ -9,7 +9,7 @@ export class ServiceRequestedRepository {
         });
     }
 
-    async updateServiceRequestedProviderService(data:AceptService): Promise<ServiceRequested> {
+    async updateServiceRequestedProviderService(data: AceptService): Promise<ServiceRequested> {
         return await prisma.serviceRequested.update({
             where: {
                 id: data.serviceRequestedId

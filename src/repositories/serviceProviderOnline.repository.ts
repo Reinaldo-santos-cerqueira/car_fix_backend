@@ -1,9 +1,9 @@
-import { ServiceProviderOnline} from "@prisma/client";
-import {prisma} from "./log.repository";
+import { ServiceProviderOnline } from "@prisma/client";
+import { prisma } from "./log.repository";
 
-export class ServiceProviderOnlinerepository{
+export class ServiceProviderOnlinerepository {
 
-    async save(socketIoId: string, serviceProviderId: string,state: number ): Promise<void> {
+    async save(socketIoId: string, serviceProviderId: string, state: number): Promise<void> {
         await prisma.serviceProviderOnline.create({
             data: {
                 socket_io_id: socketIoId,
@@ -13,19 +13,19 @@ export class ServiceProviderOnlinerepository{
         });
     }
 
-    async update(socketIoId: string, serviceProviderId: string,state: number){
+    async update(socketIoId: string, serviceProviderId: string, state: number) {
         await prisma.serviceProviderOnline.update({
-            data:{
+            data: {
                 state: state,
                 socket_io_id: socketIoId,
             },
-            where:{
+            where: {
                 service_provider_id: serviceProviderId,
             }
         });
     }
 
-    async findById(serviceProviderId: string):Promise<ServiceProviderOnline | null>{
+    async findById(serviceProviderId: string): Promise<ServiceProviderOnline | null> {
         return prisma.serviceProviderOnline.findFirst({
             where: {
                 service_provider_id: serviceProviderId
@@ -33,7 +33,7 @@ export class ServiceProviderOnlinerepository{
         });
     }
 
-    async findByState():Promise<ServiceProviderOnline[]>{
+    async findByState(): Promise<ServiceProviderOnline[]> {
         return prisma.serviceProviderOnline.findMany({
             where: {
                 state: 0
@@ -41,9 +41,9 @@ export class ServiceProviderOnlinerepository{
         });
     }
 
-    async deleteBySocketId(socketIoId: string): Promise<void>{
+    async deleteBySocketId(socketIoId: string): Promise<void> {
         await prisma.serviceProviderOnline.deleteMany({
-            where:{
+            where: {
                 socket_io_id: socketIoId,
             }
         });

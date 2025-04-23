@@ -8,11 +8,11 @@ export class ValidationServiceProviderDtoMiddlewares {
         return async (req: Request, res: Response, next: NextFunction) => {
             if (req.body.data) {
                 req.body = JSON.parse(req.body.data);
-            }            
+            }
             const dto = plainToInstance(ServiceProviderDto, req.body);
 
             const errors = await validate(dto);
-            const files = req.files as Express.Multer.File[]; 
+            const files = req.files as Express.Multer.File[];
 
             if (errors.length > 0) {
                 const formattedErrors: {
@@ -22,7 +22,7 @@ export class ValidationServiceProviderDtoMiddlewares {
                     property: error.property,
                     messages: Object.values(error.constraints || {})
                 }));
-                if(!files || files === null){
+                if (!files || files === null) {
                     formattedErrors.push({
                         property: "Image document vehicle",
                         messages: ["Image document vehicle is required"]
@@ -50,14 +50,14 @@ export class ValidationServiceProviderDtoMiddlewares {
                         });
                     }
                 }
-                
+
 
                 res.status(400).json({
                     message: "Erro de validação",
                     errors: formattedErrors
                 });
                 return;
-            }else if(!req.files || req.files === null){
+            } else if (!req.files || req.files === null) {
                 const formattedErrors: {
                     property: string;
                     messages: string[];

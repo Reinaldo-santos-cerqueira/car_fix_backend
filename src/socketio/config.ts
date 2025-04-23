@@ -11,13 +11,13 @@ export function setupSocket(server: HttpServer): SocketIOServer {
 
     const socketController = new SocketController(io);
 
-    io.on("connection", (socket: Socket) => {        
+    io.on("connection", (socket: Socket) => {
         socket.on("signup_provider_service", (msg) =>
             socketController.handleSignupProviderService(socket, msg)
         );
 
         socket.on("request_service", (msg: string) =>
-            socketController.handleRequestService(socket,  JSON.parse(msg))
+            socketController.handleRequestService(socket, JSON.parse(msg))
         );
 
         socket.on("accept_service_service_provider", async (msg: string) =>

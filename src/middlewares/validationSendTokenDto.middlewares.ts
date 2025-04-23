@@ -5,7 +5,7 @@ import { SendTokenDto } from "@dto";
 
 export class ValidationSendTokenDto {
     static validateUser() {
-        return async (req: Request, res: Response, next: NextFunction) => {    
+        return async (req: Request, res: Response, next: NextFunction) => {
             const dto = plainToInstance(SendTokenDto, req.body);
 
             const errors = await validate(dto);

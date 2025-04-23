@@ -33,31 +33,31 @@ export class SocketController {
 
         msg.user_id_socket_io_id = socket.id;
 
-        const arrayServiceProviderOnline:ServiceProviderOnline[] = await this.socketService.sendRequestedService(msg); 
+        const arrayServiceProviderOnline: ServiceProviderOnline[] = await this.socketService.sendRequestedService(msg);
 
-        arrayServiceProviderOnline.forEach( (item) => {
+        arrayServiceProviderOnline.forEach((item) => {
             this.io.to(item.socket_io_id).emit("received_service", msg);
         });
     }
 
-    public async handleAcceptServiceToServiceProvider(socket: Socket, msg: AceptService):Promise<void>{
+    public async handleAcceptServiceToServiceProvider(socket: Socket, msg: AceptService): Promise<void> {
         if (!msg) {
             this.sendError(socket, "Os dados do serviço são obrigatórios.");
             return;
         }
 
         msg.serviceProviderSocketId = socket.id;
-        
+
         const returnAccept = await this.socketService.aceptServiceByServiceProvider(msg);
 
-        if(returnAccept){
-            if (returnAccept.requestedService.user_id_socket_io_id){
+        if (returnAccept) {
+            if (returnAccept.requestedService.user_id_socket_io_id) {
                 this.io.to(returnAccept.requestedService.user_id_socket_io_id).emit("accepted_service", returnAccept);
             }
             return;
         }
 
-        this.sendError(socket, "Serviço não mais disponivel.");    
+        this.sendError(socket, "Serviço não mais disponivel.");
     }
 
     public async handleAcceptServiceToClient(socket: Socket, msg: ConfirmedStartService) {
