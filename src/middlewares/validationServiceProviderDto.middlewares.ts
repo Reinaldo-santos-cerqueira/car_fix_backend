@@ -12,8 +12,13 @@ export class ValidationServiceProviderDtoMiddlewares {
             const dto = plainToInstance(ServiceProviderDto, req.body);
 
             const errors = await validate(dto);
-            const files = req.files as Express.Multer.File[];
+            let files: Express.Multer.File[] = [];
 
+            const rawFiles = req.files;
+
+            if (rawFiles && typeof rawFiles === "object") {
+                files = Object.values(rawFiles).flat();
+            }
             if (errors.length > 0) {
                 const formattedErrors: {
                     property: string;
