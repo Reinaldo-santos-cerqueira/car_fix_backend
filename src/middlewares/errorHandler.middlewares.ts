@@ -6,8 +6,8 @@ const Errors = (
     req: Request,
     res: Response,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    next: NextFunction          
-)=> {
+    next: NextFunction
+) => {
     if (error instanceof CustomException) {
         res.status(error.statusCode).json({
             message: error.message,
