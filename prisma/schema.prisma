@@ -67,7 +67,6 @@ model Service {
   price_km_traveled      Float                    @default(0.00)
   created_at             DateTime                 @default(now())
   updated_at             DateTime                 @updatedAt
-  user_id                String                   @db.Uuid
   ServiceProviderService ServiceProviderService[]
   ServiceRequested       ServiceRequested[]
 }
