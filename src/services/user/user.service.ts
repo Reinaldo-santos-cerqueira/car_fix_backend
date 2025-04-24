@@ -83,6 +83,7 @@ export class UserService {
     async saveServiceProvider(serviceProviderDto: ServiceProviderDto, files: Express.Multer.File[] | {
         [fieldname: string]: Express.Multer.File[];
     } | undefined): Promise<void> {
+
         let fileImageDocumentVehicle: Express.Multer.File | undefined = undefined;
         let fileImageCnh: Express.Multer.File | undefined = undefined;
         if (!files) {
@@ -106,12 +107,12 @@ export class UserService {
         if (!fileImageCnh) {
             throw new CustomException("Image cnh is required", 400);
         }
+
         try {
             await this.findUserByIdentifierOrEmailOrCnh(serviceProviderDto.user_dto.identifier, serviceProviderDto.user_dto.email, serviceProviderDto.cnh);
             serviceProviderDto.user_dto.vehicle.path_to_document = fileImageDocumentVehicle.path;
             serviceProviderDto.path_to_image_cnh = fileImageCnh.path;
             const serviceProvider: Prisma.UserCreateInput = await this.createServiceUserCreateInput(serviceProviderDto);
-
             const saveServiceProvider = await this.repository.saveServiceProvider(serviceProvider);
             await this.serviceProviderServiceRepository.save(saveServiceProvider.ServiceProvider[0].id, serviceProviderDto.services_id);
 
@@ -213,7 +214,7 @@ export class UserService {
         const serviceIds = user?.ServiceProvider.flatMap(sp =>
             sp.ServiceProviderService.map(sps => sps.serviceId)
         ) || [];
-        const token = jwt.sign({ foo: "bar" }, process.env.TOKEN + "", { algorithm: "RS256" });
+        const token = jwt.sign({ foo: "bar" }, process.env.TOKEN + "");
         return {
             serviceIds: serviceIds,
             token: token,
