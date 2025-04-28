@@ -4,3 +4,4 @@ export * from "./serviceProviderOnline.repository";
 export * from "./serviceProviderService.repository";
 export * from "./serviceRequested.repository";
 export * from "./service.repository";
+export * from "./vehicle.repository";

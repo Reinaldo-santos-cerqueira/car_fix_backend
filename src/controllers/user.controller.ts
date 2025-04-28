@@ -18,18 +18,15 @@ export class UserController {
     }
 
     async loginClient(req: Request, res: Response): Promise<void> {
-        await this.service.loginClient(req.body);
-        res.status(200).json({});
+        res.status(200).json(await this.service.loginClient(req.body));
     }
 
     async logiServiceProvider(req: Request, res: Response): Promise<void> {
-        const serviceId = await this.service.loginServiceProvider(req.body);
-        res.status(200).json(serviceId);
+        res.status(200).json(await this.service.loginServiceProvider(req.body));
     }
 
     async sendByTokenTradePassword(req: Request, res: Response): Promise<void> {
-        const serviceId = await this.service.sendByTokenTradePassword(req.body);
-        res.status(200).json(serviceId);
+        res.status(200).json(await this.service.sendByTokenTradePassword(req.body));
     }
 
     async changePassword(req: Request, res: Response): Promise<void> {

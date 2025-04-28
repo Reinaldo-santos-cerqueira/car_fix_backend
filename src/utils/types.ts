@@ -48,3 +48,8 @@ export type AcceptedServiceToServiceProvider = {
     duration: number,
     requestedService: ServiceRequested
 }
+
+export interface TokenDataPayload {
+    id: string;
+    identifier: string;
+}
