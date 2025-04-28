@@ -192,7 +192,13 @@ export class UserService {
         if (!user || !(await this.comparePassword(loginDto.password, user.password))) {
             throw new CustomException("Email or password incorrect", 401);
         }
-        const token = jwt.sign({ foo: "bar" }, process.env.TOKEN + "");
+        const payload = {
+            id: user.id,
+            identifier: user.identifier,
+        };
+
+        const token = jwt.sign(payload, process.env.TOKEN + "");
+
         return {
             token: token,
             user: {
@@ -214,7 +220,13 @@ export class UserService {
         const serviceIds = user?.ServiceProvider.flatMap(sp =>
             sp.ServiceProviderService.map(sps => sps.serviceId)
         ) || [];
-        const token = jwt.sign({ foo: "bar" }, process.env.TOKEN + "");
+        const payload = {
+            id: user.id,
+            identifier: user.identifier,
+        };
+
+        const token = jwt.sign(payload, process.env.TOKEN + "");
+
         return {
             serviceIds: serviceIds,
             token: token,
