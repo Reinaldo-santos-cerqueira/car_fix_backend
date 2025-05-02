@@ -19,20 +19,45 @@ export class UserService {
         this.serviceProviderServiceRepository = new ServiceProviderServiceRepository();
     }
 
-    async saveClient(userDto: UserDto, file: Express.Multer.File | undefined): Promise<void> {
-        if (!file) {
-            throw new CustomException("Image is required", 400);
+    async saveClient(userDto: UserDto,  files: Express.Multer.File[] | {
+        [fieldname: string]: Express.Multer.File[];
+    } | undefined): Promise<void> {
+
+        let fileImageDocumentVehicle: Express.Multer.File | undefined = undefined;
+        let fileImageProfile: Express.Multer.File | undefined = undefined;
+        if (!files) {
+            throw new CustomException("Images is required", 400);
+        }
+        const fileArray: Express.Multer.File[] = Array.isArray(files)
+            ? files
+            : Object.values(files).flat();
+
+        for (const file of fileArray) {
+            if (file.fieldname === "imageDocumentVehicle") {
+                fileImageDocumentVehicle = file;
+            }else if(file.fieldname === "imageProfile"){
+                fileImageProfile = file;
+            }
+        }
+
+        if (!fileImageDocumentVehicle) {
+            throw new CustomException("Image document vehicle is required", 400);
+        }
+        if (!fileImageProfile) {
+            throw new CustomException("Image profile is required", 400);
         }
         try {
             await this.findUserByIdentifierOrEmail(userDto.identifier, userDto.email);
-            userDto.vehicle.path_to_document = file.path;
+            userDto.vehicle.path_to_document = fileImageDocumentVehicle.path;
+            userDto.path_image_profile = fileImageProfile.path;
             const user: Prisma.UserCreateInput = await this.createClientUserCreateInput(userDto);
 
             await this.repository.saveClient(user);
 
         } catch (error) {
             if (error instanceof CustomException) {
-                this.deleteImage(file);
+                this.deleteImage(fileImageDocumentVehicle);
+                this.deleteImage(fileImageProfile);
                 throw new CustomException(error.message, error.statusCode);
             }
             throw new CustomException(error + "", 500);
@@ -49,6 +74,7 @@ export class UserService {
             token_phone: userDto.token_phone,
             token_password_change: userDto.token_password_change,
             type: userDto.type,
+            path_profile_image: userDto.path_image_profile,
             address: {
                 create: {
                     neighborhood: userDto.address.neighborhood,
@@ -86,6 +112,7 @@ export class UserService {
 
         let fileImageDocumentVehicle: Express.Multer.File | undefined = undefined;
         let fileImageCnh: Express.Multer.File | undefined = undefined;
+        let fileImageProfile: Express.Multer.File | undefined = undefined;
         if (!files) {
             throw new CustomException("Images is required", 400);
         }
@@ -98,6 +125,8 @@ export class UserService {
                 fileImageDocumentVehicle = file;
             } else if (file.fieldname === "imageCnh") {
                 fileImageCnh = file;
+            }else if(file.fieldname === "imageProfile"){
+                fileImageProfile = file;
             }
         }
 
@@ -107,11 +136,15 @@ export class UserService {
         if (!fileImageCnh) {
             throw new CustomException("Image cnh is required", 400);
         }
+        if (!fileImageProfile) {
+            throw new CustomException("Image profile is required", 400);
+        }
 
         try {
             await this.findUserByIdentifierOrEmailOrCnh(serviceProviderDto.user_dto.identifier, serviceProviderDto.user_dto.email, serviceProviderDto.cnh);
             serviceProviderDto.user_dto.vehicle.path_to_document = fileImageDocumentVehicle.path;
             serviceProviderDto.path_to_image_cnh = fileImageCnh.path;
+            serviceProviderDto.user_dto.path_image_profile = fileImageProfile.path;
             const serviceProvider: Prisma.UserCreateInput = await this.createServiceUserCreateInput(serviceProviderDto);
             const saveServiceProvider = await this.repository.saveServiceProvider(serviceProvider);
             await this.serviceProviderServiceRepository.save(saveServiceProvider.ServiceProvider[0].id, serviceProviderDto.services_id);
@@ -120,6 +153,7 @@ export class UserService {
             if (error instanceof CustomException) {
                 this.deleteImage(fileImageCnh);
                 this.deleteImage(fileImageDocumentVehicle);
+                this.deleteImage(fileImageProfile);
                 throw new CustomException(error.message, error.statusCode);
             }
             throw new CustomException(error + "", 500);
@@ -138,6 +172,7 @@ export class UserService {
             token_phone: serviceProviderDto.user_dto.token_phone,
             token_password_change: serviceProviderDto.user_dto.token_password_change,
             type: serviceProviderDto.user_dto.type,
+            path_profile_image: serviceProviderDto.user_dto.path_image_profile,
             address: {
                 create: {
                     created_at: new Date(),

@@ -9,101 +9,45 @@ export class ValidationServiceProviderDtoMiddlewares {
             if (req.body.data) {
                 req.body = JSON.parse(req.body.data);
             }
+
             const dto = plainToInstance(ServiceProviderDto, req.body);
-
             const errors = await validate(dto);
-            let files: Express.Multer.File[] = [];
 
+            let files: Express.Multer.File[] = [];
             const rawFiles = req.files;
 
             if (rawFiles && typeof rawFiles === "object") {
                 files = Object.values(rawFiles).flat();
             }
-            if (errors.length > 0) {
-                const formattedErrors: {
-                    property: string;
-                    messages: string[];
-                }[] = errors.map(error => ({
-                    property: error.property,
-                    messages: Object.values(error.constraints || {})
-                }));
-                if (!files || files === null) {
-                    formattedErrors.push({
-                        property: "Image document vehicle",
-                        messages: ["Image document vehicle is required"]
-                    });
 
-                    formattedErrors.push({
-                        property: "CNH image",
-                        messages: ["CNH image is required"]
-                    });
-                } else {
-                    const hasImageDocumentVehicle = files.some(file => file.fieldname === "imageDocumentVehicle");
-                    const hasCnhImage = files.some(file => file.fieldname === "imageCnh");
+            const requiredFiles = [
+                { fieldname: "imageDocumentVehicle", name: "Image document vehicle" },
+                { fieldname: "imageCnh", name: "CNH image" },
+                { fieldname: "imageProfile", name: "Profile image" }
+            ];
 
-                    if (!hasImageDocumentVehicle) {
-                        formattedErrors.push({
-                            property: "Image document vehicle",
-                            messages: ["Image document vehicle is required"]
-                        });
-                    }
+            const missingFiles = requiredFiles.filter(({ fieldname }) => 
+                !files.some(file => file.fieldname === fieldname)
+            );
 
-                    if (!hasCnhImage) {
-                        formattedErrors.push({
-                            property: "CNH image",
-                            messages: ["CNH image is required"]
-                        });
-                    }
-                }
+            const formattedErrors = errors.map(error => ({
+                property: error.property,
+                messages: Object.values(error.constraints || {})
+            }));
 
-
-                res.status(400).json({
-                    message: "Erro de validação",
-                    errors: formattedErrors
-                });
-                return;
-            } else if (!req.files || req.files === null) {
-                const formattedErrors: {
-                    property: string;
-                    messages: string[];
-                }[] = [];
+            missingFiles.forEach(({ name }) => {
                 formattedErrors.push({
-                    property: "Image document vehicle",
-                    messages: ["Image document vehicle is required"]
+                    property: name,
+                    messages: [`${name} is required`]
                 });
+            });
+
+            if (formattedErrors.length > 0) {
                 res.status(400).json({
                     message: "Erro de validação",
                     errors: formattedErrors
                 });
                 return;
-            } else {
-                const formattedErrors: {
-                    property: string;
-                    messages: string[];
-                }[] = [];
-                const hasImageDocumentVehicle = files.some(file => file.fieldname === "imageDocumentVehicle");
-                const hasCnhImage = files.some(file => file.fieldname === "imageCnh");
-
-                if (!hasImageDocumentVehicle) {
-                    formattedErrors.push({
-                        property: "Image document vehicle",
-                        messages: ["Image document vehicle is required"]
-                    });
-                }
-
-                if (!hasCnhImage) {
-                    formattedErrors.push({
-                        property: "CNH image",
-                        messages: ["CNH image is required"]
-                    });
-                }
-                if (formattedErrors.length > 0) {
-                    res.status(400).json({
-                        message: "Erro de validação",
-                        errors: formattedErrors
-                    });
-                }
-
             }
 
             next();

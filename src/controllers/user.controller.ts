@@ -8,7 +8,7 @@ export class UserController {
     }
 
     async saveClient(req: Request, res: Response): Promise<void> {
-        await this.service.saveClient(req.body, req.file);
+        await this.service.saveClient(req.body, req.files);
         res.status(201).json({});
     }
 

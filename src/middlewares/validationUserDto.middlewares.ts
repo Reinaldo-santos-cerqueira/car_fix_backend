@@ -9,42 +9,40 @@ export class ValidationUserDtoMiddlewares {
             if (req.body.data) {
                 req.body = JSON.parse(req.body.data);
             }
-
             const dto = plainToInstance(UserDto, req.body);
-
             const errors = await validate(dto);
 
-            if (errors.length > 0) {
-                const formattedErrors: {
-                    property: string;
-                    messages: string[];
-                }[] = errors.map(error => ({
-                    property: error.property,
-                    messages: Object.values(error.constraints || {})
-                }));
-                if (!req.file || req.file === null) {
-                    formattedErrors.push({
-                        property: "Image document vehicle",
-                        messages: ["Image document vehicle is required"]
-                    });
-                }
+            let files: Express.Multer.File[] = [];
+            const rawFiles = req.files;
 
-                res.status(400).json({
-                    message: "Erro de validação",
-                    errors: formattedErrors
-                });
-                return;
-            } else if (!req.file || req.file === null) {
-                const formattedErrors: {
-                    property: string;
-                    messages: string[];
-                }[] = [];
+            if (rawFiles && typeof rawFiles === "object") {
+                files = Object.values(rawFiles).flat();
+            }
+
+            const requiredFiles = [
+                { fieldname: "imageDocumentVehicle", name: "Image document vehicle" },
+                { fieldname: "imageProfile", name: "Profile image" }
+            ];
+
+            const formattedErrors = errors.map(error => ({
+                property: error.property,
+                messages: Object.values(error.constraints || {})
+            }));
+
+            const missingFiles = requiredFiles.filter(({ fieldname }) => 
+                !files.some(file => file.fieldname === fieldname)
+            );
+
+            missingFiles.forEach(({ name }) => {
                 formattedErrors.push({
-                    property: "Image document vehicle",
-                    messages: ["Image document vehicle is required"]
+                    property: name,
+                    messages: [`${name} is required`]
                 });
+            });
+
+            if (formattedErrors.length > 0) {
                 res.status(400).json({
-                    message: "Erro de validação",
+                    messages: "Erro de validação",
                     errors: formattedErrors
                 });
                 return;

@@ -55,6 +55,10 @@ export class UserDto {
     @IsString({ message: "Role must be a string" })
     role?: string;
 
+    @IsOptional()
+    @IsString({ message: "Path to image profile must be a string" })
+    path_image_profile?: string;
+
     constructor(
         full_name: string,
         phone_number: string,
@@ -67,7 +71,8 @@ export class UserDto {
         token_password_change?: string,
         type?: string,
         address_id?: string,
-        role?: string
+        role?: string,
+        path_image_profile?: string,
     ) {
         this.full_name = full_name;
         this.phone_number = phone_number;
@@ -81,5 +86,6 @@ export class UserDto {
         this.address = address;
         this.role = role;
         this.vehicle = vehicle;
+        this.path_image_profile = path_image_profile;
     }
 }

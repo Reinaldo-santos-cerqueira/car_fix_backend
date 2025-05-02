@@ -15,10 +15,10 @@ export class ServiceProviderDto {
     @ValidateNested({ message: "Data user is required" })
     @Type(() => UserDto)
     user_dto: UserDto;
-    @IsArray({ message: "Services is required" })
+    @IsArray({ message: "Services is array" })
     @ArrayNotEmpty({ message: "Services cannot be empty" })
     services_id: string[];
-    @IsString({ message: "Services is required" })
+    @IsString({ message: "Cnh is required" })
     cnh: string;
     @IsOptional()
     @IsString({ message: "Image cnh is required" })
