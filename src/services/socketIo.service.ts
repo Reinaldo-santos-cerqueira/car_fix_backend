@@ -1,14 +1,16 @@
 import { ServiceProviderOnline, ServiceRequested } from "@prisma/client";
-import { ServiceProviderOnlinerepository, ServiceRequestedRepository } from "@repositories";
-import { AcceptedServiceToServiceProvider, AceptService, CanceledService, ConfirmedStartService, LegData, ServiceProviderSignupSocketIoRequest } from "@utils";
-
+import { ServiceProviderOnlinerepository, ServiceRepository, ServiceRequestedRepository, UserRepository } from "@repositories";
+import { AcceptedServiceToClient, AcceptedServiceToServiceProvider, AceptService, CanceledService, ChangeSocketId, ConfirmedStartService, ServiceProviderSignupSocketIoRequest } from "@utils";
 export class SocketService {
     private readonly serviceProviderRepo: ServiceProviderOnlinerepository;
     private readonly serviceRequestedRepo: ServiceRequestedRepository;
-
+    private readonly userRepository: UserRepository;
+    private readonly serviceRepository: ServiceRepository;
     constructor() {
         this.serviceProviderRepo = new ServiceProviderOnlinerepository();
         this.serviceRequestedRepo = new ServiceRequestedRepository();
+        this.userRepository = new UserRepository();
+        this.serviceRepository = new ServiceRepository();
     }
 
     public async signupProviderService(socketId: string, providerId: string): Promise<string> {
@@ -45,10 +47,15 @@ export class SocketService {
         await this.serviceProviderRepo.deleteBySocketId(socketId);
     }
 
-    public async sendRequestedService(msg: ServiceRequested): Promise<ServiceProviderOnline[]> {
-        await this.serviceRequestedRepo.createServiceRequested(msg);
-        const serviceProviderOnline: ServiceProviderOnline[] = await this.serviceProviderRepo.findByState();
-        return serviceProviderOnline;
+    public async sendRequestedService(msg: ServiceRequested): Promise<{ idServiceRequested: string, serviceProviderOnline: ServiceProviderOnline[] }> {
+        let serviceRequestedCreated;
+        if (msg.id === undefined) {
+            serviceRequestedCreated = await this.serviceRequestedRepo.createServiceRequested(msg);
+        } else {
+            serviceRequestedCreated = await this.serviceRequestedRepo.get(msg);
+        }
+        const serviceProviderOnline: ServiceProviderOnline[] = await this.serviceProviderRepo.findByState(msg.service_id);
+        return { idServiceRequested: serviceRequestedCreated!.id, serviceProviderOnline };
     }
 
     public async aceptServiceByServiceProvider(msg: AceptService): Promise<AcceptedServiceToServiceProvider | null> {
@@ -57,30 +64,32 @@ export class SocketService {
             return null;
         }
         const requestedServiceDb = await this.serviceRequestedRepo.updateServiceRequestedProviderService(msg);
-        const paramsRequestServiceProvider = msg.latitudeServiceProvider + "," + msg.longitudeServiceProvider;
-        const paramsRequestClient = requestedServiceDb.latitude_client + "," + requestedServiceDb.longitude_client;
+        const serviceProvider = await this.userRepository.findServiceProviderById(msg.serviceProviderId);
+        const service = await this.serviceRepository.getById(requestedServiceDb.service_id);
+        const paramsRequestServiceProvider = msg.longitudeServiceProvider + "," + msg.latitudeServiceProvider;
+        const paramsRequestClient = requestedServiceDb.longitude_client + "," + requestedServiceDb.latitude_client;
         const paramsRequest = paramsRequestServiceProvider + ";" + paramsRequestClient;
         const urlRequest = `http://router.project-osrm.org/route/v1/driving/${paramsRequest}?overview=false`;
         let distance = 0;
         let duration = 0;
         const response = await fetch(urlRequest);
         const data = await response.json();
-        if (data.code === "Ok") {
-            const route = data.routes[0];
-            route.legs.forEach((leg: LegData) => {
-                distance = distance + leg.distance;
-                duration = duration + leg.duration;
-            });
-        }
-        return { distance, duration: duration / 60, requestedService: requestedServiceDb };
+        const route = data.routes[0];
+        for (const leg of route.legs) {
+            distance = distance + leg.distance;
+            duration = duration + leg.duration;
+        };
+        const valueService = service!.price_service + ((distance / 1000) * service!.price_km_traveled);
+        return { distance: Math.ceil(distance / 1000), duration: Math.ceil(duration / 60), requestedService: requestedServiceDb, serviceProvider: serviceProvider, valueService: valueService };
     }
 
-    public async aceptServiceByClient(msg: ConfirmedStartService): Promise<ServiceRequested | void> {
+    public async aceptServiceByClient(msg: ConfirmedStartService): Promise<AcceptedServiceToClient | void> {
         const returnRequestById = await this.serviceRequestedRepo.findById(msg.serviceRequestedId);
         if (returnRequestById?.status !== 1) {
             return;
         }
-        return await this.serviceRequestedRepo.updateServiceRequestedClient(msg);
+        const dataUser = await this.userRepository.findClientById(returnRequestById.user_id_client!);
+        return { serviceRequested: await this.serviceRequestedRepo.updateServiceRequestedClient(msg), client: { vehicle: dataUser!.Vehicle, path_profile_image: dataUser!.path_profile_image } };
     }
 
     public async canceledService(msg: CanceledService): Promise<{ socketIoIdClient: string, socketIoIdServiceProvider: string } | null> {
@@ -92,5 +101,14 @@ export class SocketService {
             }
         }
         return null;
+    }
+
+    public async handlechangeSocketId(msg: ChangeSocketId, socketId: string) {
+        if (msg.type === "client") {
+            await this.serviceRequestedRepo.changeSocketIdClient(msg, socketId);
+        } else {
+            await this.serviceRequestedRepo.changeSocketIdServiceProvider(msg, socketId);
+        }
+
     }
 }
