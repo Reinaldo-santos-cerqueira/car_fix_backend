@@ -18,6 +18,7 @@ export interface AceptService {
     longitudeServiceProvider: number;
     serviceProviderSocketId: string;
     status: number;
+    vehicleIdServiceProvider: string;
 }
 
 export interface ConfirmedStartService {
@@ -43,13 +44,43 @@ export interface ServiceProviderSignupSocketIoRequest {
     state: number
 }
 
+export interface ChangeSocketId {
+    type: string;
+    requestedServiceId: string;
+}
+
 export type AcceptedServiceToServiceProvider = {
     distance: number,
     duration: number,
-    requestedService: ServiceRequested
+    requestedService: ServiceRequested,
+    serviceProvider: {
+        id: string;
+        full_name: string;
+        phone_number: string;
+        identifier: string;
+        path_profile_image: string | null;
+    } | null,
+    valueService: number
+}
+export type AcceptedServiceToClient = {
+    serviceRequested: ServiceRequested,
+    client: {
+        vehicle: {
+            id: string;
+            model: string;
+            mark: string;
+            plate: string;
+            color: string;
+        }[] | null,
+        path_profile_image: string | null,
+    } | null,
 }
 
 export interface TokenDataPayload {
     id: string;
     identifier: string;
+}
+
+export interface SignUpServiceProviderOnline {
+    service_provider_user_id: string;
 }
