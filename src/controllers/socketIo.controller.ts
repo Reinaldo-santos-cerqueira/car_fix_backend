@@ -1,7 +1,7 @@
 import { Server, Socket } from "socket.io";
 import { SocketService } from "@services";
 import { ServiceProviderOnline, ServiceRequested } from "@prisma/client";
-import { AceptService, CanceledService, ConfirmedStartService } from "@utils";
+import { AceptService, CanceledService, ChangeSocketId, ConfirmedStartService, SignUpServiceProviderOnline } from "@utils";
 
 export class SocketController {
     private readonly io: Server;
@@ -16,9 +16,9 @@ export class SocketController {
         this.io.to(socket.id).emit("error_message", { message });
     }
 
-    public async handleSignupProviderService(socket: Socket, msg: string) {
+    public async handleSignupProviderService(socket: Socket, msg: SignUpServiceProviderOnline) {
         try {
-            const response = await this.socketService.signupProviderService(socket.id, msg);
+            const response = await this.socketService.signupProviderService(socket.id, msg.service_provider_user_id);
             this.io.to(socket.id).emit("signup_provider_service", response);
         } catch (error) {
             this.sendError(socket, error + "");
@@ -30,12 +30,11 @@ export class SocketController {
             this.sendError(socket, "Os dados do serviço são obrigatórios.");
             return;
         }
-
         msg.user_id_socket_io_id = socket.id;
-
-        const arrayServiceProviderOnline: ServiceProviderOnline[] = await this.socketService.sendRequestedService(msg);
-
-        arrayServiceProviderOnline.forEach((item) => {
+        const arrayReturn: { idServiceRequested: string, serviceProviderOnline: ServiceProviderOnline[] } = await this.socketService.sendRequestedService(msg);
+        msg.id = arrayReturn.idServiceRequested;
+        this.io.to(socket.id).emit("received_service", msg);
+        arrayReturn.serviceProviderOnline.forEach((item) => {
             this.io.to(item.socket_io_id).emit("received_service", msg);
         });
     }
@@ -69,11 +68,11 @@ export class SocketController {
         const returnAccept = await this.socketService.aceptServiceByClient(msg);
 
         if (returnAccept) {
-            if (returnAccept.service_provider_socket_io_id) {
-                this.io.to(returnAccept.service_provider_socket_io_id).emit("confirmed_start_service", returnAccept);
+            if (returnAccept.serviceRequested.service_provider_socket_io_id) {
+                this.io.to(returnAccept.serviceRequested.service_provider_socket_io_id).emit("confirmed_start_service", returnAccept);
             }
-            if (returnAccept.user_id_socket_io_id) {
-                this.io.to(returnAccept.user_id_socket_io_id).emit("confirmed_start_service", returnAccept);
+            if (returnAccept.serviceRequested.user_id_socket_io_id) {
+                this.io.to(returnAccept.serviceRequested.user_id_socket_io_id).emit("confirmed_start_service", returnAccept);
             }
             return;
         }
@@ -88,11 +87,18 @@ export class SocketController {
         }
 
         const returnServiceRequested = await this.socketService.canceledService(msg);
-
         if (returnServiceRequested) {
             this.io.to(returnServiceRequested.socketIoIdClient).emit("canceled_service", msg);
             this.io.to(returnServiceRequested.socketIoIdServiceProvider).emit("canceled_service", msg);
         }
+    }
+
+    public async handlechangeSocketId(socket: Socket, msg: ChangeSocketId) {
+        if (!msg) {
+            this.sendError(socket, "Os dados do serviço são obrigatórios.");
+            return;
+        }
+        await this.socketService.handlechangeSocketId(msg, socket.id);
     }
 
     public async handleDisconnect(socket: Socket) {
