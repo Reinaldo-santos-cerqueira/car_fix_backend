@@ -7,7 +7,7 @@ export class ServiceProviderOnlinerepository {
         await prisma.serviceProviderOnline.create({
             data: {
                 socket_io_id: socketIoId,
-                service_provider_id: serviceProviderId,
+                user_id: serviceProviderId,
                 state: state
             }
         });
@@ -20,7 +20,7 @@ export class ServiceProviderOnlinerepository {
                 socket_io_id: socketIoId,
             },
             where: {
-                service_provider_id: serviceProviderId,
+                user_id: serviceProviderId,
             }
         });
     }
@@ -28,15 +28,26 @@ export class ServiceProviderOnlinerepository {
     async findById(serviceProviderId: string): Promise<ServiceProviderOnline | null> {
         return prisma.serviceProviderOnline.findFirst({
             where: {
-                service_provider_id: serviceProviderId
+                user_id: serviceProviderId
             }
         });
     }
 
-    async findByState(): Promise<ServiceProviderOnline[]> {
+    async findByState(serviceId: string): Promise<ServiceProviderOnline[]> {
         return prisma.serviceProviderOnline.findMany({
             where: {
-                state: 0
+                state: 0,
+                user:{
+                    ServiceProvider:{
+                        some:{
+                            ServiceProviderService:{
+                                some:{
+                                    serviceId: serviceId
+                                }
+                            }
+                        }
+                    }
+                }
             }
         });
     }
