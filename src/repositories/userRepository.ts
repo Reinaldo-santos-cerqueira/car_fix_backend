@@ -1,5 +1,5 @@
 import { CustomException } from "@exceptions";
-import { PrismaClient, Prisma, User } from "@prisma/client";
+import { PrismaClient, Prisma, User} from "@prisma/client";
 
 export class UserRepository {
     prisma = new PrismaClient();
@@ -107,5 +107,59 @@ export class UserRepository {
             }
             throw new CustomException("Internal server error", 500);
         }
+    }
+
+    async findServiceProviderById(id: string): Promise<{
+        id: string;
+        full_name: string;
+        phone_number: string;
+        identifier: string;
+        path_profile_image: string | null;
+        Vehicle: { id: string; model: string; mark: string; plate: string; color: string; }[];
+    }| null> {
+        return await this.prisma.user.findFirst({
+            where: {
+                id
+            },
+            select: {
+                id: true,
+                full_name: true,
+                phone_number: true,
+                identifier: true,
+                path_profile_image: true,
+                Vehicle:{
+                    select: {
+                        id: true,
+                        model: true,
+                        plate: true,
+                        color: true,
+                        mark: true,
+                    }
+                }
+            }
+        }); 
+    }
+
+    async findClientById(id: string): Promise<{
+        Vehicle: { id: string; model: string; mark: string; plate: string; color: string; }[],
+        path_profile_image: string | null,
+    } | null> {
+        return await this.prisma.user.findFirst({
+            where: {
+                id
+            },
+            select: {
+                path_profile_image: true,
+                Vehicle: {
+                    select: {
+                        id: true,
+                        model: true,
+                        mark: true,
+                        plate: true,
+                        color: true,
+                    }
+                }
+            }
+        });
     }
 }
