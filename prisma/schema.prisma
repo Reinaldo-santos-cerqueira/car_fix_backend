@@ -28,24 +28,27 @@ model Address {
 }
 
 model User {
-  id                    String             @id @default(uuid()) @db.Uuid
+  id                    String            @id @default(uuid()) @db.Uuid
   full_name             String
   phone_number          String
-  email                 String             @unique
-  identifier            String             @unique
+  email                 String            @unique
+  identifier            String            @unique
   password              String
   token_phone           String?
-  token_password_change String?            @db.Char(6)
+  token_password_change String?           @db.Char(6)
   type                  String?
-  address_id            String?            @db.Uuid
+  address_id            String?           @db.Uuid
   role                  String?
-  created_at            DateTime           @default(now())
-  updated_at            DateTime           @updatedAt
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
   path_profile_image    String?
-  address               Address?           @relation(fields: [address_id], references: [id])
+  address               Address?          @relation(fields: [address_id], references: [id])
   ServiceProvider       ServiceProvider[]
   Vehicle               Vehicle[]
-  ServiceRequested      ServiceRequested[]
+
+  ServiceProviderOnline    ServiceProviderOnline[]
+  serviceRequestedClient   ServiceRequested[]      @relation("UserClient")
+  serviceRequestedProvider ServiceRequested[]      @relation("UserProviderService")
 }
 
 model ServiceProvider {
@@ -57,7 +60,6 @@ model ServiceProvider {
   user_id                String                   @db.Uuid
   user                   User                     @relation(fields: [user_id], references: [id])
   ServiceProviderService ServiceProviderService[]
-  ServiceRequested       ServiceRequested[]
 }
 
 model Service {
@@ -73,17 +75,19 @@ model Service {
 }
 
 model Vehicle {
-  id               String             @id @default(uuid()) @db.Uuid
+  id               String   @id @default(uuid()) @db.Uuid
   model            String
   mark             String
   plate            String
   color            String
   path_to_document String
-  created_at       DateTime           @default(now())
-  updated_at       DateTime           @updatedAt
-  user_id          String?            @db.Uuid
-  User             User?              @relation(fields: [user_id], references: [id])
-  ServiceRequested ServiceRequested[]
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+  user_id          String?  @db.Uuid
+  User             User?    @relation(fields: [user_id], references: [id])
+
+  serviceRequestedClient   ServiceRequested[] @relation("VehicleClient")
+  serviceRequestedProvider ServiceRequested[] @relation("VehicleProvider")
 }
 
 model ServiceProviderService {
@@ -97,31 +101,36 @@ model ServiceProviderService {
 }
 
 model ServiceRequested {
-  id                            String           @id @default(uuid()) @db.Uuid
-  service_provider_id           String?          @db.Uuid
-  service_id                    String           @db.Uuid
-  user_id                       String           @db.Uuid
-  status                        Int              @default(0)
+  id                            String   @id @default(uuid()) @db.Uuid
+  user_id_provider_service      String?  @db.Uuid
+  service_id                    String   @db.Uuid
+  user_id_client                String?  @db.Uuid
+  status                        Int      @default(0)
   latitude_client               Float?
   longitude_client              Float?
   latitude_service_provider     Float?
   longitude_service_provider    Float?
   service_provider_socket_io_id String?
   user_id_socket_io_id          String?
-  vehicle_id_client             String           @db.Uuid
-  created_at                    DateTime         @default(now())
-  updated_at                    DateTime         @updatedAt
-  service_provider              ServiceProvider? @relation(fields: [service_provider_id], references: [id])
-  service                       Service          @relation(fields: [service_id], references: [id])
-  user                          User             @relation(fields: [user_id], references: [id])
-  vehicle                       Vehicle          @relation(fields: [vehicle_id_client], references: [id])
+  vehicle_id_client             String   @db.Uuid
+  vehicle_id_service_provider   String?  @db.Uuid
+  created_at                    DateTime @default(now())
+  updated_at                    DateTime @updatedAt
+
+  service               Service @relation(fields: [service_id], references: [id])
+  user_client           User?   @relation("UserClient", fields: [user_id_client], references: [id])
+  user_provider_service User?   @relation("UserProviderService", fields: [user_id_provider_service], references: [id])
+
+  vehicle                  Vehicle  @relation("VehicleClient", fields: [vehicle_id_client], references: [id])
+  vehicle_service_provider Vehicle? @relation("VehicleProvider", fields: [vehicle_id_service_provider], references: [id])
 }
 
 model ServiceProviderOnline {
-  id                  String @id @default(uuid()) @db.Uuid
-  service_provider_id String @unique @db.Uuid
-  socket_io_id        String
-  state               Int
+  id           String  @id @default(uuid()) @db.Uuid
+  user_id      String? @unique @db.Uuid
+  socket_io_id String
+  state        Int
+  user         User?   @relation(fields: [user_id], references: [id])
 }
 
 model Log {
