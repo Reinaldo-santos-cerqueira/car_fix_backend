@@ -11,4 +11,4 @@ routes.use(serviceRouter);
 routes.use(vehicleRouter);
 const imagesDir = path.join(__dirname, "../../uploads");
 
-routes.use("/images", express.static(imagesDir));
+routes.use("/uploads", express.static(imagesDir));
